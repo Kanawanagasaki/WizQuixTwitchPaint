@@ -1,8 +1,4 @@
-﻿/**
- * I'm making some changes to check is it workig :)
- */
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
