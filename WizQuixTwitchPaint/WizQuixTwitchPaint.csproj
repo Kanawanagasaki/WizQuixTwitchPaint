@@ -135,8 +135,20 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Canvas.cs" />
+    <Compile Include="Model\HistoryItem.cs" />
+    <Compile Include="Model\SolidColor.cs" />
+    <Compile Include="Model\Colors.cs" />
+    <Compile Include="Model\Twitch.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\At.cs" />
+    <Compile Include="View\CanvasPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="View\ColorsPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

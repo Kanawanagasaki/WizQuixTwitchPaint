@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.MainContainer = new System.Windows.Forms.SplitContainer();
             this.ControlSplitter = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -43,8 +42,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.ChannelTextbox = new System.Windows.Forms.TextBox();
             this.MessagedPeriodTextbox = new System.Windows.Forms.TextBox();
-            this.TickTimer = new System.Windows.Forms.Timer(this.components);
-            this.TwitchTimer = new System.Windows.Forms.Timer(this.components);
             this.ImageSelectionButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.MainContainer)).BeginInit();
             this.MainContainer.Panel2.SuspendLayout();
@@ -63,13 +60,6 @@
             this.MainContainer.Location = new System.Drawing.Point(0, 0);
             this.MainContainer.Name = "MainContainer";
             // 
-            // MainContainer.Panel1
-            // 
-            this.MainContainer.Panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.splitContainer1_Panel1_Paint);
-            this.MainContainer.Panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainContainer_Panel1_MouseDown);
-            this.MainContainer.Panel1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MainContainer_Panel1_MouseMove);
-            this.MainContainer.Panel1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MainContainer_Panel1_MouseUp);
-            // 
             // MainContainer.Panel2
             // 
             this.MainContainer.Panel2.Controls.Add(this.ControlSplitter);
@@ -80,7 +70,7 @@
             // ControlSplitter
             // 
             this.ControlSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ControlSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.ControlSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.ControlSplitter.IsSplitterFixed = true;
             this.ControlSplitter.Location = new System.Drawing.Point(0, 0);
             this.ControlSplitter.Name = "ControlSplitter";
@@ -89,13 +79,8 @@
             // ControlSplitter.Panel1
             // 
             this.ControlSplitter.Panel1.Controls.Add(this.tableLayoutPanel1);
-            // 
-            // ControlSplitter.Panel2
-            // 
-            this.ControlSplitter.Panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.splitContainer1_Panel2_Paint);
-            this.ControlSplitter.Panel2.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ControlSplitter_Panel2_MouseClick);
             this.ControlSplitter.Size = new System.Drawing.Size(246, 720);
-            this.ControlSplitter.SplitterDistance = 420;
+            this.ControlSplitter.SplitterDistance = 220;
             this.ControlSplitter.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -199,7 +184,6 @@
             this.ConnectButton.TabIndex = 5;
             this.ConnectButton.Text = "Connect";
             this.ConnectButton.UseVisualStyleBackColor = true;
-            this.ConnectButton.Click += new System.EventHandler(this.ConnectButton_Click);
             // 
             // label4
             // 
@@ -238,7 +222,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(109, 26);
             this.label6.TabIndex = 8;
-            this.label6.Text = "Messages Period";
+            this.label6.Text = "Messages Interval";
             this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // ChannelTextbox
@@ -258,17 +242,6 @@
             this.MessagedPeriodTextbox.TabIndex = 10;
             this.MessagedPeriodTextbox.Text = "5000";
             // 
-            // TickTimer
-            // 
-            this.TickTimer.Enabled = true;
-            this.TickTimer.Interval = 20;
-            this.TickTimer.Tick += new System.EventHandler(this.TickTimer_Tick);
-            // 
-            // TwitchTimer
-            // 
-            this.TwitchTimer.Interval = 5000;
-            this.TwitchTimer.Tick += new System.EventHandler(this.TwitchTimer_Tick);
-            // 
             // ImageSelectionButton
             // 
             this.tableLayoutPanel1.SetColumnSpan(this.ImageSelectionButton, 2);
@@ -279,7 +252,6 @@
             this.ImageSelectionButton.TabIndex = 11;
             this.ImageSelectionButton.Text = "Select Image";
             this.ImageSelectionButton.UseVisualStyleBackColor = true;
-            this.ImageSelectionButton.Click += new System.EventHandler(this.ImageSelectionButton_Click);
             // 
             // Form1
             // 
@@ -307,7 +279,6 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer MainContainer;
-        private System.Windows.Forms.Timer TickTimer;
         private System.Windows.Forms.SplitContainer ControlSplitter;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
@@ -321,7 +292,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox ChannelTextbox;
         private System.Windows.Forms.TextBox MessagedPeriodTextbox;
-        private System.Windows.Forms.Timer TwitchTimer;
         private System.Windows.Forms.Button ImageSelectionButton;
     }
 }

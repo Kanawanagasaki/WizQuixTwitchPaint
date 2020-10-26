@@ -1,0 +1,13 @@
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.exe
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.deps.json
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.runtimeconfig.json
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.runtimeconfig.dev.json
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.dll
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\bin\Debug\netcoreapp3.1\Ttest.pdb
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.csprojAssemblyReference.cache
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.AssemblyInfoInputs.cache
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.AssemblyInfo.cs
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.csproj.CoreCompileInputs.cache
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.dll
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.pdb
+C:\Users\Kanawanagasaki\YandexDisk\source\repos\WizQuixTwitchPaint\Ttest\obj\Debug\netcoreapp3.1\Ttest.genruntimeconfig.cache
