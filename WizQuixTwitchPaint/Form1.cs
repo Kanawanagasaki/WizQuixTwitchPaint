@@ -21,12 +21,6 @@ using WizQuixTwitchPaint.Model;
 using WizQuixTwitchPaint.Util;
 using WizQuixTwitchPaint.View;
 
-/*
- #1;Red=3355647;Light Red=10066431;Dark Red=153;Orange=3381759;Light Orange=10079487;Dark Orange=19609;Yellow=3407871;Light Yellow=10092543;Dark Yellow=39321;Lime=3407769;Light Lime=10092492;Dark Lime=39244;Green=3407667;Light Green=10092441;Dark Green=39168;Aqua=10092339;Light Aqua=13434777;Dark Aqua=5019904;Cyan=16777011;Light Cyan=16777113;Dark Cyan=10066176;
-
-#2;Blue=16750899;Light Blue=16764057;Dark Blue=10046464;Indigo=16724787;Light Indigo=16751001;Dark Indigo=10027008;Violet=16724889;Light Violet=16751052;Dark Violet=10027084;Pink=16724991;Light Pink=16751103;Dark Pink=10027161;Ruby=10040319;Light Ruby=13408767;Dark Ruby=4980889;White=16777215;Light Grey=14737632;Grey=8421504;Dark Grey=4210752;Light Black=2105376;Black=0;
- */
-
 namespace WizQuixTwitchPaint
 {
     public partial class Form1 : Form
@@ -108,6 +102,7 @@ namespace WizQuixTwitchPaint
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error");
+                Console.WriteLine($"{ex.Message}\n{ex.StackTrace}");
             }
         }
 

@@ -12,7 +12,7 @@ namespace WizQuixTwitchPaint.Model
 {
     public class Twitch
     {
-        private const int _minDelay = 750;
+        private const int _minDelay = 500;
 
         public bool IsConnected { get; private set; }
 
@@ -103,18 +103,34 @@ namespace WizQuixTwitchPaint.Model
 
         private void _client_OnMessageReceived(object sender, TwitchLib.Client.Events.OnMessageReceivedArgs e)
         {
-            int index = e.ChatMessage.Message.IndexOf(';');
-            if (index < 0) return;
-            string header = e.ChatMessage.Message.Substring(0, index+1);
-            if (!header.StartsWith("#")) return;
-            if (!header.EndsWith(";")) return;
-            string messageId = header.Substring(1, header.Length - 2);
-            if (!int.TryParse(messageId, out var id)) return;
-            if (id != _lastColorId + 1) return;
+            string message = e.ChatMessage.Message;
 
-            _lastColorId = id;
-            string colors = e.ChatMessage.Message.Substring(index+1);
-            this._colors.ParseColors(colors);
+            if(message.StartsWith("!"))
+            {
+                string command = message.Substring(1);
+                string[] args = command.Split(' ');
+                if(args[0] == "paint")
+                {
+                    string coords = args[1];
+                    string color = string.Join(" ", args.Where((s, i) => i > 1));
+                    this._canvas.SetPixelFromChat(coords, color);
+                }
+            }
+            else
+            {
+                int index = message.IndexOf(';');
+                if (index < 0) return;
+                string header = message.Substring(0, index + 1);
+                if (!header.StartsWith("#")) return;
+                if (!header.EndsWith(";")) return;
+                string messageId = header.Substring(1, header.Length - 2);
+                if (!int.TryParse(messageId, out var id)) return;
+                if (id != _lastColorId + 1) return;
+
+                _lastColorId = id;
+                string colors = message.Substring(index + 1);
+                this._colors.ParseColors(colors);
+            }
         }
 
         private void _client_OnFailureToReceiveJoinConfirmation(object sender, TwitchLib.Client.Events.OnFailureToReceiveJoinConfirmationArgs e)

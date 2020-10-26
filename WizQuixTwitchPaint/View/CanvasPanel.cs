@@ -99,12 +99,12 @@ namespace WizQuixTwitchPaint.View
             g.DrawRectangle(_canvas.Colors.GoldPen, bx1, by1, pixelSize, pixelSize);
 
             var vertical = _canvas.VerticalCoords;
-            for (int i = 0; i < vertical.Length; i++)
+            for (int i = 0; i < vertical.Count; i++)
                 g.DrawString(vertical[i], Font, Brushes.White, left / 2, top + i * pixelSize + pixelSize / 2, _stringFormat);
 
             float bottom = GetBottom();
             var horizontal = _canvas.HorizontalCoords;
-            for (int i = 0; i < horizontal.Length; i++)
+            for (int i = 0; i < horizontal.Count; i++)
                 g.DrawString(horizontal[i], Font, Brushes.White, left + i * pixelSize + pixelSize / 2, bottom + _padding / 2, _stringFormat);
 
             g.DrawRectangle(Pens.White, top - 1, left - 1, GetWidth() + 1, GetHeight() + 1);
