@@ -1,5 +1,6 @@
 WizQuixTwitchPaint/bin/Debug
 WizQuixTwitchPaint/bin/Debug/*
 .vs
-\WizQuixTwitchPaint/obj
-\WizQuixTwitchPaint/obj/*
+.vs/*
+WizQuixTwitchPaint/obj
+WizQuixTwitchPaint/obj/*

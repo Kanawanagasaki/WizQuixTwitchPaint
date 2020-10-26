@@ -108,7 +108,6 @@ namespace WizQuixTwitchPaint.View
                 g.DrawString(horizontal[i], Font, Brushes.White, left + i * pixelSize + pixelSize / 2, bottom + _padding / 2, _stringFormat);
 
             g.DrawRectangle(Pens.White, top - 1, left - 1, GetWidth() + 1, GetHeight() + 1);
-
         }
 
         private (int x, int y) GetCoordsFromPoint(float px, float py)

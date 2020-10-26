@@ -12,14 +12,21 @@ namespace WizQuixTwitchPaint.Model
 {
     public class Twitch
     {
-        private const int _minDelay = 500;
+        private const int MIN_DELAY = 500;
 
         public bool IsConnected { get; private set; }
 
-        private int _delay = _minDelay;
+        private int _minDelay = MIN_DELAY;
+        public int MinDelay
+        {
+            get => Math.Max(this._minDelay, MIN_DELAY);
+            set => _minDelay = Math.Max(MIN_DELAY, value);
+        }
+
+        private int _delay = MIN_DELAY;
         public int Delay
         {
-            get => this._delay;
+            get => Math.Max(this._delay, this.MinDelay);
             set
             {
                 _delay = Math.Max(_minDelay, value);
@@ -75,6 +82,8 @@ namespace WizQuixTwitchPaint.Model
             _client.OnError += _client_OnError;
             _client.OnFailureToReceiveJoinConfirmation += _client_OnFailureToReceiveJoinConfirmation;
             _client.OnMessageReceived += _client_OnMessageReceived;
+            _client.OnChannelStateChanged += _client_OnChannelStateChanged;
+            _client.OnUserStateChanged += _client_OnUserStateChanged;
             _client.Initialize(credentials, this._channel);
             _client.Connect();
 
@@ -84,6 +93,30 @@ namespace WizQuixTwitchPaint.Model
             _lastColorId = 0;
 
             return true;
+        }
+
+        private void _client_OnUserStateChanged(object sender, TwitchLib.Client.Events.OnUserStateChangedArgs e)
+        {
+            if(e.UserState.Badges.Any(b=>b.Key == "vip" || b.Key == "broadcaster"))
+            {
+                MinDelay = MIN_DELAY;
+            }
+            else
+            {
+                MinDelay = 2000;
+            }
+        }
+
+        private void _client_OnChannelStateChanged(object sender, TwitchLib.Client.Events.OnChannelStateChangedArgs e)
+        {
+            if(e.ChannelState.SlowMode.HasValue)
+            {
+                this.MinDelay = e.ChannelState.SlowMode.Value * 1000 + 500;
+            }
+            else
+            {
+                this.MinDelay = MIN_DELAY;
+            }
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -165,7 +198,7 @@ namespace WizQuixTwitchPaint.Model
         private void _client_OnConnected(object sender, TwitchLib.Client.Events.OnConnectedArgs e)
         {
             IsConnected = true;
-            this._client.SendMessage(this._channel, "!colorcodes");
+            //this._client.SendMessage(this._channel, "!colorcodes");
             this._colors.Clear();
 
             this._onconnect?.Invoke();
