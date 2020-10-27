@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>twitchpaint_1_icon.ico</ApplicationIcon>
+    <ApplicationIcon>twitchpainticon2_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
@@ -195,6 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="cat_icon.ico" />
+    <Content Include="twitchpainticon2_icon.ico" />
     <Content Include="twitchpaint_1_icon.ico" />
   </ItemGroup>
   <ItemGroup>
