@@ -54,10 +54,9 @@ namespace WizQuixTwitchPaint.Model
             this._colors = colors;
 
             _timer = new Timer();
-            _timer.Enabled = true;
             _timer.Interval = Delay;
+            this._timer.Enabled = true;
             _timer.Tick += _timer_Tick;
-            _timer.Start();
         }
 
         public bool Connect(string username, string token, string channel, Action onconnect = null, Action<string> onfailed = null)
@@ -77,7 +76,6 @@ namespace WizQuixTwitchPaint.Model
             var socketClient = new WebSocketClient();
             _client = new TwitchClient(socketClient);
             _client.OnConnected += _client_OnConnected;
-            _client.OnDisconnected += _client_OnDisconnected;
             _client.OnConnectionError += _client_OnConnectionError;
             _client.OnError += _client_OnError;
             _client.OnFailureToReceiveJoinConfirmation += _client_OnFailureToReceiveJoinConfirmation;
@@ -184,21 +182,17 @@ namespace WizQuixTwitchPaint.Model
         public void Disconnect()
         {
             if (!IsConnected) return;
+            IsConnected = false;
 
             this._client.LeaveChannel(this._channel);
             this._client.Disconnect();
             this._client = null;
         }
 
-        private void _client_OnDisconnected(object sender, TwitchLib.Communication.Events.OnDisconnectedEventArgs e)
-        {
-            IsConnected = false;
-        }
-
         private void _client_OnConnected(object sender, TwitchLib.Client.Events.OnConnectedArgs e)
         {
             IsConnected = true;
-            //this._client.SendMessage(this._channel, "!colorcodes");
+            this._client.SendMessage(this._channel, "!colorcodes");
             this._colors.Clear();
 
             this._onconnect?.Invoke();
