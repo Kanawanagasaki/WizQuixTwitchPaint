@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // набора атрибутов. Измените значения этих атрибутов для изменения сведений,
 // связанных со сборкой.
 [assembly: AssemblyTitle("WizQuixTwitchPaint")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Twitch Painting tool")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Kanawanagasaki")]
 [assembly: AssemblyProduct("WizQuixTwitchPaint")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
