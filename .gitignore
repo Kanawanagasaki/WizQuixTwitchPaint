@@ -1,6 +1,11 @@
-WizQuixTwitchPaint/bin/Debug
-WizQuixTwitchPaint/bin/Debug/*
 .vs
 .vs/*
+WizQuixTwitchPaint/bin/Debug
+WizQuixTwitchPaint/bin/Debug/*
 WizQuixTwitchPaint/obj
 WizQuixTwitchPaint/obj/*
+WizQuixTwitchPaintApiService/bin/Debug
+WizQuixTwitchPaintApiService/bin/Debug/*
+WizQuixTwitchPaintApiService/obj
+WizQuixTwitchPaintApiService/obj/*
+WizQuixTwitchPaintApiService/settings.json

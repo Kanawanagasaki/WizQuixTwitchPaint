@@ -1,0 +1,80 @@
+Connection: websockets. After handshaking clients should send 'setme' command. If client sends another command he will be disconnected.
+Commands are just null-terminated strings aka \0 at the end
+
+
+#everybody:
+
+command: setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]
+on success: info getme OK
+on fail:
+	- error setme 401 Identify error. Use 'setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]'.
+	- error setme 409 Room '<channelname:string>' already exists.
+	- error setme 404 Room '<channelname:string>' didn't exists.
+examples:
+	- setme broadcaster 123123123 // Identifying as broadcaster with twitch id 123123123
+	- setme broadcaster kanawanagasakiyoko  // Identifying as broadcaster with twitch nickname kanawanagasakiyoko
+	- setme viewer 123123123 kanawanagasakiyoko  // Identifying as viewer with twitch nickname kanawanagasakiyoko and connection to channel with id 123123123
+	- setme viewer kanawanagasakiyoko 123123123  // Identifying as viewer with twitch id 123123123 and connection to channel kanawanagasakiyoko
+
+command: setpixel <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
+on success: info setpixel OK
+on fail:
+	- error setpixel 404 Color '<colorname:string>' didn't exists
+	- error setpixel 400 Coordinate is out of range
+	- error setpixel 400 Wrong number of arguments 
+examples:
+	- setpixel A1 Red
+	- setpixel d13 blue
+
+command: getcolors
+on success: info getcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
+
+command: getbackground
+on success: info getbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+
+command: getcanvas
+on success: info getcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]> coordinate in formal <letter:char><number:int>
+
+#broadcaster:
+
+command: setcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
+on success: info setcolors OK
+examples:
+	- setcolors red=16711680;blue=255;green=65280;
+	- setcolors Black=0;White=16777215;
+
+command: setcolor <colorname:string> <colorrgb:int>
+on success: info setcolor OK
+on fail:
+	- error setcolor 400 colorrgb should be an integer
+	- error setcolor 400 Wrong number of arguments 
+examples:
+	- setcolor red 16711680
+	- setcolor BLACK 0
+	
+command: clearpalette // this command will clear the palette
+on success: info clearpalette OK
+
+command: setbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+on success: info setbackground OK
+on fail:
+	- error setbackground 400 Bad base64 encoding
+	- error setbackground 400 Wrong number of arguments 
+examples:
+	- setbackground data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=
+
+command: setcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]>, coordinate in formal: <letter:char><number:int>, colornames should be sent earlier
+on success: info setcanvas OK
+examples:
+	- setcanvas A1=Red;A2=Blue;A3=Green;F11=Semi Light Semi Dark Random Color;A4=Black;A5=Light Gray;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+commands from server are just proxying from broadcaster to viewers and vice versa
+
+#server:
+
+command: info setpixel <username:string> <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
+command: info setbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+command: info setcolor <colorname:string> <colorrgb:int>
+command: info clearpalette
