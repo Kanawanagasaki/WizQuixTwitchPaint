@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <ActiveDebugProfile>WizQuixTwitchPaintApiService</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>WizQuixTwichPaint - Web Deploy</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>WizQuixTwitchPaint - Web Deploy</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>

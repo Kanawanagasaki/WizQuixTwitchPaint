@@ -1,0 +1,82 @@
+{
+  "allowHttpBackend": false,
+  "backendCommand": "",
+  "backendFolderName": "",
+  "certificateExceptions": [],
+  "extensionViews": [
+    {
+      "channelId": "128142135",
+      "configurationAnchor": "video_overlay",
+      "displayChannelName": "kanawanagasakiyoko",
+      "features": {
+        "isBitsEnabled": false,
+        "isChatEnabled": false,
+        "isSubscriptionStatusAvailable": false
+      },
+      "frameSize": {
+        "width": 1280,
+        "height": 720
+      },
+      "id": "1",
+      "isPopout": false,
+      "label": "",
+      "linked": false,
+      "linkedUserId": "",
+      "orientation": "Portrait",
+      "type": "video_overlay",
+      "viewerType": "Broadcaster"
+    }
+  ],
+  "manifest": {
+    "anchor": "video_overlay",
+    "assetUrls": [],
+    "authorName": "Kanawanagasaki",
+    "bitsEnabled": false,
+    "canInstall": true,
+    "configUrl": "http://localhost:80/config.html",
+    "configurationLocation": "none",
+    "description": "WizQuix Twitch Paint",
+    "eulaTosUrl": "",
+    "hasChatSupport": false,
+    "iconUrl": "",
+    "iconUrls": {},
+    "id": "6by6lxkri7puo3090dqqxtikf06wgd",
+    "installationCount": -42,
+    "liveConfigUrl": "",
+    "name": "WizQuixPaint",
+    "panelHeight": 0,
+    "privacyPolicyUrl": "",
+    "requestIdentityLink": true,
+    "requiredBroadcasterAbilities": [],
+    "screenshotUrls": [],
+    "sku": "",
+    "state": "Testing",
+    "subscriptionsSupportLevel": "none",
+    "summary": "WizQuix Twitch Paint",
+    "supportEmail": "kanawanagasaki@gmail.com",
+    "vendorCode": "",
+    "version": "0.0.1",
+    "viewerSummary": "WizQuix Twitch Paint",
+    "viewerUrl": "",
+    "viewerUrls": {
+      "videoOverlay": "http://localhost:80/video_overlay.html"
+    },
+    "views": {
+      "videoOverlay": {
+        "viewerUrl": "http://localhost:80/video_overlay.html",
+        "canLinkExternalContent": false
+      },
+      "config": {
+        "viewerUrl": "http://localhost:80/config.html",
+        "canLinkExternalContent": false
+      }
+    },
+    "whitelistedConfigUrls": [],
+    "whitelistedPanelUrls": []
+  },
+  "frontendCommand": "",
+  "frontendFolderName": "C:\\Users\\Kanawanagasaki\\YandexDisk\\source\\repos\\WizQuixTwitchPaint\\WizQuixTwitchPaintExtension\\release",
+  "name": "KanawanagasakiTest",
+  "usingRandomFrontendHostingPort": true,
+  "version": 3
+}

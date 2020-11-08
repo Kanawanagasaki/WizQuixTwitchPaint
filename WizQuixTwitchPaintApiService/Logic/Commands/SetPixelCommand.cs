@@ -26,7 +26,8 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
                 return;
             }
 
-            var res = await Client.JoinedRoom.SetPixel(Client, args[0], args[1]);
+            var colorname = string.Join(" ", args.Skip(1).ToArray());
+            var res = await Client.JoinedRoom.SetPixel(Client, args[0], colorname);
             switch(res)
             {
                 case Room.SetPixelErrors.ColorDidntExists:

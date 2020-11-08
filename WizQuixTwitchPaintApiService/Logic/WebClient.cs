@@ -45,14 +45,16 @@ namespace WizQuixTwitchPaintApiService.Logic
             _commands.Add(new GetColorsCommand(this));
             _commands.Add(new GetBackgroundCommand(this));
             _commands.Add(new GetCanvasCommand(this));
+            _commands.Add(new GetTitleCommand(this));
 
-            if(IsBroadcaster)
+            if (IsBroadcaster)
             {
                 _commands.Add(new SetColorsCommand(this));
                 _commands.Add(new SetColorCommand(this));
                 _commands.Add(new ClearPaletteCommand(this));
                 _commands.Add(new SetBackgroundCommand(this));
                 _commands.Add(new SetCanvasCommand(this));
+                _commands.Add(new SetTitleCommand(this));
             }
         }
 

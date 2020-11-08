@@ -22,6 +22,7 @@ namespace WizQuixTwitchPaintApiService.Logic
         public ConcurrentDictionary<int, WebClient> Viewers { get; private set; } = new ConcurrentDictionary<int, WebClient>();
 
         public string Background { get; private set; } = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=";
+        public string Title { get; private set; } = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=";
 
         public List<MyColor> Colors = new List<MyColor>
         {
@@ -82,7 +83,7 @@ namespace WizQuixTwitchPaintApiService.Logic
             {
                 for (int ix = 0; ix < Room.Width; ix++)
                 {
-                    Canvas[ix, iy] = Colors[0];
+                    Canvas[ix, iy] = Colors[Colors.Count - 2];
                 }
             }
         }
@@ -141,6 +142,19 @@ namespace WizQuixTwitchPaintApiService.Logic
             Background = $"data:image/png;base64,{bg}";
 
             await Wideband($"info setbackground {Background}", Broadcaster);
+
+            return true;
+        }
+
+        public async Task<bool> SetTitle(string title)
+        {
+            if (title.StartsWith("data:image/png;base64,"))
+                title = title.Substring("data:image/png;base64,".Length);
+            if (!IsBase64String(title)) return false;
+
+            Title = $"data:image/png;base64,{title}";
+
+            await Wideband($"info settitle {Title}", Broadcaster);
 
             return true;
         }

@@ -34,6 +34,7 @@ namespace WizQuixTwitchPaintApiService.Controllers
                     viewers = room.Viewers.Values.Select(v => v.User),
                     colors = room.Colors,
                     background = room.Background,
+                    title = room.Title,
                     canvas = room.GetCanvasAsBase64()
                 });
             }

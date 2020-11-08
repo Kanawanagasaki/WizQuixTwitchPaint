@@ -27,7 +27,7 @@ namespace WizQuixTwitchPaintApiService.Models
             Hex = hex;
             Name = name;
 
-            RGB = int.Parse(new string(hex.Substring(1).Reverse().ToArray()), System.Globalization.NumberStyles.HexNumber);
+            RGB = int.Parse(new string(hex.Substring(1)), System.Globalization.NumberStyles.HexNumber);
         }
 
         internal void Update(int rgb)

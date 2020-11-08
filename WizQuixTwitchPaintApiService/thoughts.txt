@@ -5,7 +5,7 @@ Commands are just null-terminated strings aka \0 at the end
 #everybody:
 
 command: setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]
-on success: info getme OK
+on success: info setme OK
 on fail:
 	- error setme 401 Identify error. Use 'setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]'.
 	- error setme 409 Room '<channelname:string>' already exists.
@@ -31,6 +31,9 @@ on success: info getcolors <palette:string> // palette in format: <<colorname:st
 
 command: getbackground
 on success: info getbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+
+command: gettitle
+on success: info gettitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 
 command: getcanvas
 on success: info getcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]> coordinate in formal <letter:char><number:int>
@@ -63,6 +66,12 @@ on fail:
 examples:
 	- setbackground data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=
 
+command: settitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+on success: info setbackground OK
+on fail:
+	- error setbackground 400 Bad base64 encoding
+	- error setbackground 400 Wrong number of arguments 
+
 command: setcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]>, coordinate in formal: <letter:char><number:int>, colornames should be sent earlier
 on success: info setcanvas OK
 examples:
@@ -76,5 +85,6 @@ commands from server are just proxying from broadcaster to viewers and vice vers
 
 command: info setpixel <username:string> <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
 command: info setbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
+command: info settitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 command: info setcolor <colorname:string> <colorrgb:int>
 command: info clearpalette
