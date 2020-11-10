@@ -15,6 +15,8 @@ class WebClient
     public Background:string;
     public Title:string;
 
+    public Interval:number = 2500;
+
     public OnBackgroundChanged:()=>any = undefined;
     public OnTitleChanged:()=>any = undefined;
     public OnConnected:()=>any = undefined;
@@ -30,7 +32,17 @@ class WebClient
         {
             this.OnAuth(auth);
         });
-        setInterval(()=>this.ProcessHistory(), 1000);
+
+        this.StartTimer(()=>this.ProcessHistory());
+    }
+
+    private StartTimer(func:()=>any)
+    {
+        setTimeout(()=>
+        {
+            func();
+            this.StartTimer(func);
+        }, this.Interval);
     }
 
     public SetBackground(bg:string)
@@ -80,6 +92,7 @@ class WebClient
         this.SendMessage("gettitle");
         this.SendMessage("getcolors");
         this.SendMessage("getcanvas");
+        this.SendMessage("getinterval");
     }
 
     public MissingRoom()

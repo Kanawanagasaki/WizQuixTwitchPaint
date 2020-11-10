@@ -378,6 +378,7 @@ var HistoryItem = (function () {
 var WebClient = (function () {
     function WebClient(uri, canvas) {
         var _this = this;
+        this.Interval = 2500;
         this.OnBackgroundChanged = undefined;
         this.OnTitleChanged = undefined;
         this.OnConnected = undefined;
@@ -389,8 +390,15 @@ var WebClient = (function () {
         Twitch.ext.onAuthorized(function (auth) {
             _this.OnAuth(auth);
         });
-        setInterval(function () { return _this.ProcessHistory(); }, 1000);
+        this.StartTimer(function () { return _this.ProcessHistory(); });
     }
+    WebClient.prototype.StartTimer = function (func) {
+        var _this = this;
+        setTimeout(function () {
+            func();
+            _this.StartTimer(func);
+        }, this.Interval);
+    };
     WebClient.prototype.SetBackground = function (bg) {
         this.Background = bg;
         if (this.OnBackgroundChanged !== undefined)
@@ -424,6 +432,7 @@ var WebClient = (function () {
         this.SendMessage("gettitle");
         this.SendMessage("getcolors");
         this.SendMessage("getcanvas");
+        this.SendMessage("getinterval");
     };
     WebClient.prototype.MissingRoom = function () {
         if (this.OnMissingRoom !== undefined)
@@ -496,10 +505,12 @@ var Commands = (function () {
         this._commands.push(new GetBackgroundCommand(client));
         this._commands.push(new GetCanvasCommand(client));
         this._commands.push(new GetColorsCommand(client));
+        this._commands.push(new GetIntervalCommand(client));
         this._commands.push(new GetTitleCommand(client));
         this._commands.push(new JoinRoomCommand(client));
         this._commands.push(new SetBackgroundCommand(client));
         this._commands.push(new SetColorCommand(client));
+        this._commands.push(new SetIntervalCommand(client));
         this._commands.push(new SetPixelCommand(client));
         this._commands.push(new SetTitleCommand(client));
     }
@@ -574,6 +585,23 @@ var GetColorsCommand = (function (_super) {
     };
     return GetColorsCommand;
 }(ACommand));
+var GetIntervalCommand = (function (_super) {
+    __extends(GetIntervalCommand, _super);
+    function GetIntervalCommand(client) {
+        return _super.call(this, "getinterval", client) || this;
+    }
+    GetIntervalCommand.prototype.OnInfo = function (data) {
+        if (data.length < 0)
+            return;
+        var num = parseInt(data[0]);
+        if (num <= 0)
+            return;
+        this.Client.Interval = num;
+    };
+    GetIntervalCommand.prototype.OnError = function (code, error) {
+    };
+    return GetIntervalCommand;
+}(ACommand));
 var GetTitleCommand = (function (_super) {
     __extends(GetTitleCommand, _super);
     function GetTitleCommand(client) {
@@ -632,6 +660,23 @@ var JoinRoomCommand = (function (_super) {
         }
     };
     return JoinRoomCommand;
+}(ACommand));
+var SetIntervalCommand = (function (_super) {
+    __extends(SetIntervalCommand, _super);
+    function SetIntervalCommand(client) {
+        return _super.call(this, "setinterval", client) || this;
+    }
+    SetIntervalCommand.prototype.OnInfo = function (data) {
+        if (data.length < 0)
+            return;
+        var num = parseInt(data[0]);
+        if (num <= 0)
+            return;
+        this.Client.Interval = num;
+    };
+    SetIntervalCommand.prototype.OnError = function (code, error) {
+    };
+    return SetIntervalCommand;
 }(ACommand));
 var SetPixelCommand = (function (_super) {
     __extends(SetPixelCommand, _super);

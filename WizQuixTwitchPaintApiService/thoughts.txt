@@ -51,6 +51,9 @@ on success: info gettitle <image:string> // image is a base64 encoded png image 
 command: getcanvas
 on success: info getcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]> coordinate in formal <letter:char><number:int>
 
+command: getinterval
+on success: info getinterval <interval:int>
+
 #room creator:
 
 command: setcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
@@ -90,6 +93,13 @@ on success: info setcanvas OK
 examples:
 	- setcanvas A1=Red;A2=Blue;A3=Green;F11=Semi Light Semi Dark Random Color;A4=Black;A5=Light Gray;
 
+command: setinterval <interval:int>
+on success: info setinterval OK
+on fail:
+	- error setbackground 400 Wrong number of arguments
+	- error setbackground 400 Interval must be a number
+	- error setbackground 400 Interval must be greater than 0
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 commands from server are just proxying from broadcaster to viewers and vice versa
@@ -101,3 +111,4 @@ command: info setbackground <image:string> // image is a base64 encoded png imag
 command: info settitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 command: info setcolor <colorname:string> <colorrgb:int>
 command: info clearpalette
+command: info setinterval <interval:int>

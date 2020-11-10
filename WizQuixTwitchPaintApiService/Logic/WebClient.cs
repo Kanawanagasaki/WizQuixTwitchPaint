@@ -54,6 +54,7 @@ namespace WizQuixTwitchPaintApiService.Logic
             _commands.Add(new GetBackgroundCommand(this));
             _commands.Add(new GetCanvasCommand(this));
             _commands.Add(new GetTitleCommand(this));
+            _commands.Add(new GetIntervalCommand(this));
 
             if (IsBroadcaster)
             {
@@ -63,6 +64,7 @@ namespace WizQuixTwitchPaintApiService.Logic
                 _commands.Add(new SetBackgroundCommand(this));
                 _commands.Add(new SetCanvasCommand(this));
                 _commands.Add(new SetTitleCommand(this));
+                _commands.Add(new SetIntervalCommand(this));
             }
         }
 

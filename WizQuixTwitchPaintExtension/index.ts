@@ -11,10 +11,12 @@
 /// <reference path="./Classes/Models/Commands/GetBackgroudCommand.ts" />
 /// <reference path="./Classes/Models/Commands/GetCanvasCommand.ts" />
 /// <reference path="./Classes/Models/Commands/GetColorsCommand.ts" />
+/// <reference path="./Classes/Models/Commands/GetIntervalCommand.ts" />
 /// <reference path="./Classes/Models/Commands/GetTitleCommand.ts" />
 /// <reference path="./Classes/Models/Commands/SetBackroundCommand.ts" />
 /// <reference path="./Classes/Models/Commands/SetColorCommand.ts" />
 /// <reference path="./Classes/Models/Commands/JoinRoomCommand.ts" />
+/// <reference path="./Classes/Models/Commands/SetIntervalCommand.ts" />
 /// <reference path="./Classes/Models/Commands/SetPixelCommand.ts" />
 /// <reference path="./Classes/Models/Commands/SetTitleCommand.ts" />
 /// <reference path="./Classes/View/CanvasPanel.ts" />
@@ -24,4 +26,4 @@ let productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 let testUri = "wss://localhost:5001";
 
 let appDiv = document.getElementById("app");
-let app:App = new App(appDiv, productUri);
+let app:App = new App(appDiv, testUri);

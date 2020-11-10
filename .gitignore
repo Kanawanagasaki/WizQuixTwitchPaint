@@ -11,5 +11,6 @@ WizQuixTwitchPaintApiService/obj/*
 WizQuixTwitchPaintApiService/settings.json
 WizQuixTwitchPaintApiService/Properties
 WizQuixTwitchPaintApiService/Properties/*
+WizQuixTwitchPaintExtension/release/WizQuixPaint.json
 Test
 Test/*

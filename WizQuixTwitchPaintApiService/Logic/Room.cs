@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using WizQuixTwitchPaintApiService.Models;
 
 namespace WizQuixTwitchPaintApiService.Logic
@@ -18,6 +19,10 @@ namespace WizQuixTwitchPaintApiService.Logic
 
         public string Name { get; private set; }
 
+        public int Interval { get; private set; } = 2500;
+        private Timer _timer;
+        private ConcurrentQueue<HistoryItem> _history = new ConcurrentQueue<HistoryItem>();
+        
         public WebClient Broadcaster { get; private set; }
         public ConcurrentDictionary<int, WebClient> Viewers { get; private set; } = new ConcurrentDictionary<int, WebClient>();
 
@@ -90,24 +95,62 @@ namespace WizQuixTwitchPaintApiService.Logic
             broadcaster.JoinedRoom = this;
             broadcaster.OnConnectionClose += Broadcaster_OnConnectionClose;
             broadcaster.InitCommands();
+
+            _timer = new Timer();
+            _timer.Interval = Interval;
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.Start();
         }
 
         private void Broadcaster_OnConnectionClose(WebClient client)
         {
-            Hub.RemoveRoom(client.Channel.Id);
+            Task.Run(async () => await Hub.RemoveRoom(client.Channel.Id));
         }
 
-        public async Task<SetPixelErrors> SetPixel(WebClient client, string coords, string colorname)
+        public async Task<SetPixelErrors> SetPixel(WebClient client, string coords, string colorname, bool ignoreHistory)
         {
             if (!ParseCoords(coords, out var xy)) return SetPixelErrors.OutOfRange;
             var color = Colors.FirstOrDefault(c=>c.Name.ToLower() == colorname.ToLower());
             if (color == null) return SetPixelErrors.ColorDidntExists;
 
-            Canvas[xy.x, xy.y] = color;
-            if(client == Broadcaster) await Wideband($"info setpixel {client.Channel.DisplayName} {coords} {colorname}", client);
-            else await Wideband($"info setpixel {client.User.DisplayName} {coords} {colorname}", client);
+            var item = new HistoryItem
+            {
+                X = xy.x,
+                Y = xy.y,
+                Coords = coords,
+                Color = color,
+                Client = client
+            };
+
+            if (ignoreHistory)
+            {
+                Canvas[item.X, item.Y] = item.Color;
+                if (item.Client == Broadcaster) await Wideband($"info setpixel {item.Client.Channel.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
+                else await Wideband($"info setpixel {item.Client.User.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
+            }
+            else _history.Enqueue(item);
 
             return SetPixelErrors.OK;
+        }
+        
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Task.Run(async ()=>
+            {
+                if (!_history.IsEmpty && _history.TryDequeue(out var item))
+                {
+                    Canvas[item.X, item.Y] = item.Color;
+                    if (item.Client == Broadcaster) await Wideband($"info setpixel {item.Client.Channel.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
+                    else await Wideband($"info setpixel {item.Client.User.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
+                }
+            });
+        }
+
+        public async Task SetInterval(int interval)
+        {
+            this.Interval = interval;
+            _timer.Interval = interval;
+            await Wideband($"info setinterval {interval}", Broadcaster);
         }
 
         public async Task AddColor(string name, int rgb)
@@ -173,7 +216,7 @@ namespace WizQuixTwitchPaintApiService.Logic
             var pixels = ParseCanvas(data);
             foreach(var pixel in pixels)
             {
-                await SetPixel(Broadcaster, pixel.coord, pixel.color);
+                await SetPixel(Broadcaster, pixel.coord, pixel.color, true);
             }
         }
 
