@@ -16,6 +16,16 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
             Client = client;
         }
 
+        public async Task SendInfo(string text = "OK")
+        {
+            await Client.SendInfo(Name, text);
+        }
+
+        public async Task SendError(WebClient.HttpCodes code, string reason)
+        {
+            await Client.SendError(Name, code, reason);
+        }
+
         public abstract Task Execute(string[] args);
     }
 }

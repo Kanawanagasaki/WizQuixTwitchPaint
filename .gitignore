@@ -9,3 +9,7 @@ WizQuixTwitchPaintApiService/bin/Debug/*
 WizQuixTwitchPaintApiService/obj
 WizQuixTwitchPaintApiService/obj/*
 WizQuixTwitchPaintApiService/settings.json
+WizQuixTwitchPaintApiService/Properties
+WizQuixTwitchPaintApiService/Properties/*
+Test
+Test/*

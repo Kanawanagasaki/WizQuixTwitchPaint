@@ -20,7 +20,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         {
             string canvas = string.Join(" ", args);
             await Client.JoinedRoom.SetCanvas(canvas);
-            await Client.SendMessage("info setcanvas OK");
+            await SendInfo();
         }
     }
 }

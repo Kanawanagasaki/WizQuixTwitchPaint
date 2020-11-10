@@ -15,8 +15,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
 
         public override async Task Execute(string[] args)
         {
-            string canvas = Client.JoinedRoom.GetCanvasAsString();
-            await Client.SendMessage($"info getcanvas {canvas}");
+            await SendInfo(Client.JoinedRoom.GetCanvasAsString());
         }
     }
 }

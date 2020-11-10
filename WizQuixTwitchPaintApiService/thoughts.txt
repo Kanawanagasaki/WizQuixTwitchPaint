@@ -1,20 +1,33 @@
-Connection: websockets. After handshaking clients should send 'setme' command. If client sends another command he will be disconnected.
-Commands are just null-terminated strings aka \0 at the end
+Connection: websockets. After handshaking clients should send 'createroom' or 'joinroom' command.
+Commands are lines with new line symbol (\n) on the end.
+First word in line is command name, after is arguments.
 
+Like if command is
+`lovethatcat he so cute\n`
+`lovetahtcat` - command
+`he`, `so` and `cute` are arguments
 
 #everybody:
 
-command: setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]
-on success: info setme OK
+command: createroom <{channelid:int|channelname:string}>
+on success: info createroom OK
 on fail:
-	- error setme 401 Identify error. Use 'setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]'.
-	- error setme 409 Room '<channelname:string>' already exists.
-	- error setme 404 Room '<channelname:string>' didn't exists.
+	- error createroom 400 Wrong number of arguments.
+	- error createroom 401 Client not a broadcaster.
+	- error createroom 409 Room '<channelname:string>' already exists.
 examples:
-	- setme broadcaster 123123123 // Identifying as broadcaster with twitch id 123123123
-	- setme broadcaster kanawanagasakiyoko  // Identifying as broadcaster with twitch nickname kanawanagasakiyoko
-	- setme viewer 123123123 kanawanagasakiyoko  // Identifying as viewer with twitch nickname kanawanagasakiyoko and connection to channel with id 123123123
-	- setme viewer kanawanagasakiyoko 123123123  // Identifying as viewer with twitch id 123123123 and connection to channel kanawanagasakiyoko
+	- createroom 123123123
+	- createroom kanawanagasakiyoko
+
+command: joinroom <{channelid:int|channelname:string}> <{userid:int|username:string}>
+on success: info joinroom OK
+on fail:
+	- error joinroom 400 Wrong number of arguments.
+	- error joinroom 401 Client not a viewer.
+	- error joinroom 409 Room '<channelname:string>' didn't exists.
+examples:
+	- joinroom 123123123 kanawanagasakiyoko // Identifying as viewer with twitch nickname kanawanagasakiyoko and connection to channel with id 123123123
+	- joinroom kanawanagasakiyoko 123123123 // Identifying as viewer with twitch id 123123123 and connection to channel kanawanagasakiyoko
 
 command: setpixel <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
 on success: info setpixel OK
@@ -38,7 +51,7 @@ on success: info gettitle <image:string> // image is a base64 encoded png image 
 command: getcanvas
 on success: info getcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]> coordinate in formal <letter:char><number:int>
 
-#broadcaster:
+#room creator:
 
 command: setcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
 on success: info setcolors OK

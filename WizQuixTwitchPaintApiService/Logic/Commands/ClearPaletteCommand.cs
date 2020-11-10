@@ -16,7 +16,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         public override async Task Execute(string[] args)
         {
             await Client.JoinedRoom.ClearColors();
-            await Client.SendMessage("info clearpalette OK");
+            await SendInfo();
         }
     }
 }

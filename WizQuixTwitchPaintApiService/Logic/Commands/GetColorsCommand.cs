@@ -17,7 +17,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         {
             var colors = Client.JoinedRoom.Colors.ToArray();
             string palette = string.Join("", colors.Select(c=>$"{c.Name}={c.RGB};"));
-            await Client.SendMessage($"info getcolors {palette}");
+            await SendInfo(palette);
         }
     }
 }

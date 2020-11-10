@@ -326,7 +326,8 @@ var WebClient = (function () {
     };
     WebClient.prototype.OnOpen = function (event) {
         this.IsConnected = true;
-        this.SendMessage("setme viewer " + this._auth.channelId + " " + this._auth.userId.replace(/\D/g, ''));
+        var jwt = this.ParseJwt(this._auth.token);
+        this.SendMessage("setme viewer " + this._auth.channelId + " " + jwt.user_id);
     };
     WebClient.prototype.OnMessage = function (message) {
         if (typeof (message.data) === "string") {
@@ -341,6 +342,15 @@ var WebClient = (function () {
     };
     WebClient.prototype.OnError = function (error) {
     };
+    WebClient.prototype.ParseJwt = function (token) {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    };
+    ;
     WebClient.prototype.BackgraundChanged = function () {
         for (var i = 0; i < this._eventBackgroundChanged.length; i++) {
             this._eventBackgroundChanged[i]();
@@ -739,5 +749,5 @@ var PalettePanel = (function () {
 var productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 var testUri = "wss://localhost:5001";
 var appDiv = document.getElementById("app");
-var app = new App(appDiv, productUri);
+var app = new App(appDiv, testUri);
 //# sourceMappingURL=index.js.map

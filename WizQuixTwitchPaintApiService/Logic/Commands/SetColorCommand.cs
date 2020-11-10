@@ -22,18 +22,18 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
 
         public override async Task Execute(string[] args)
         {
-            if(args.Length < 2)
+            if (args.Length < 2)
             {
-                await Client.SendMessage("error setcolor 400 Wrong number of arguments");
+                await SendError(WebClient.HttpCodes.Code400, "Wrong number of arguments");
                 return;
             }
             if(!int.TryParse(args[1], out int rgb))
             {
-                await Client.SendMessage("error setcolor 400 colorrgb should be an integer");
+                await SendError(WebClient.HttpCodes.Code400, "'colorrgb' should be an integer");
                 return;
             }
             await Client.JoinedRoom.AddColor(args[0], rgb);
-            await Client.SendMessage("info setcolor OK");
+            await SendInfo();
         }
     }
 }

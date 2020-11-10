@@ -20,7 +20,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         {
             string palette = string.Join(" ", args);
             await Client.JoinedRoom.SetColors(palette);
-            await Client.SendMessage("info setcolors OK");
+            await SendInfo();
         }
     }
 }

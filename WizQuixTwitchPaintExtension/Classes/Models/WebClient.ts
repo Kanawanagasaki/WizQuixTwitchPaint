@@ -95,7 +95,8 @@ class WebClient
     private OnOpen(event:Event)
     {
         this.IsConnected = true;
-        this.SendMessage(`setme viewer ${this._auth.channelId} ${this._auth.userId.replace(/\D/g,'')}`);
+        let jwt = this.ParseJwt(this._auth.token);
+        this.SendMessage(`setme viewer ${this._auth.channelId} ${jwt.user_id}`);
     }
 
     private OnMessage(message:MessageEvent<any>)
@@ -119,6 +120,17 @@ class WebClient
     {
         
     }
+
+    private ParseJwt (token)
+    {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    
+        return JSON.parse(jsonPayload);
+    };
 
     private BackgraundChanged()
     {

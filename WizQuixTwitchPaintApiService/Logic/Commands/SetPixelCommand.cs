@@ -22,7 +22,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         {
             if(args.Length < 2)
             {
-                await Client.SendMessage("error setpixel 400 Wrong number of arguments");
+                await SendError(WebClient.HttpCodes.Code400, "Wrong number of arguments");
                 return;
             }
 
@@ -31,13 +31,13 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
             switch(res)
             {
                 case Room.SetPixelErrors.ColorDidntExists:
-                    await Client.SendMessage($"error setpixel 404 Color '{args[1]}' didn't exists");
+                    await SendError(WebClient.HttpCodes.Code404, $"Color '{args[1]}' didn't exists");
                     break;
                 case Room.SetPixelErrors.OutOfRange:
-                    await Client.SendMessage("error setpixel 400 Coordinate is out of range");
+                    await SendError(WebClient.HttpCodes.Code400, "Coordinate is out of range");
                     break;
                 case Room.SetPixelErrors.OK:
-                    await Client.SendMessage("info setpixel OK");
+                    await SendInfo();
                     break;
             }
         }

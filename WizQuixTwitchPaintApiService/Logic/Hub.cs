@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Threading.Tasks;
+using WizQuixTwitchPaintApiService.Logic.Commands;
 
 namespace WizQuixTwitchPaintApiService.Logic
 {
@@ -31,55 +32,48 @@ namespace WizQuixTwitchPaintApiService.Logic
 
         public static async Task ProcessClient(WebClient client)
         {
-            await client.Identify();
-            if (!client.IsIdentified)
-            {
-                await client.SendMessage("error setme 401 Identify error. Use 'setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]'.");
-                await client.Close();
-                return;
-            }
-            if(client.IsBroadcaster)
+            client.InitIdentification();
+            await client.Run();
+        }
+
+        public static async Task<(bool status, WebClient.HttpCodes code, string reason)> CreateRoom(WebClient client)
+        {
+            if (client.IsBroadcaster)
             {
                 if (Rooms.ContainsKey(client.Channel.Id))
                 {
-                    await client.SendMessage($"error setme 409 Room '{client.Channel.Login}' already exists.");
-                    await client.Close();
-                    return;
+                    if (Rooms[client.Channel.Id].Broadcaster.CheckConnection())
+                        return (false, WebClient.HttpCodes.Code409, $"Room '{client.Channel.Login}' already exists.");
+                    else await RemoveRoom(client.Channel.Id);
                 }
 
                 var room = new Room(client);
                 Rooms.TryAdd(client.Channel.Id, room);
 
-                await client.SendMessage($"info setme OK");
-
-                client.Init();
-                client.JoinedRoom = room;
-
-                client.OnConnectionClose += Client_OnConnectionClose;
+                return (true, WebClient.HttpCodes.Code200, "");
             }
-            else
-            {
-                if (!Rooms.ContainsKey(client.Channel.Id))
-                {
-                    await client.SendMessage($"error setme 404 Room '{client.Channel.Login}' didn't exists.");
-                    await client.Close();
-                    return;
-                }
-
-                Rooms[client.Channel.Id].AddViewer(client);
-
-                await client.SendMessage($"info setme OK");
-
-                client.Init();
-                client.JoinedRoom = Rooms[client.Channel.Id];
-            }
-            await client.Run();
+            else return (false, WebClient.HttpCodes.Code401, "Client not a broadcaster");
         }
 
-        private static void Client_OnConnectionClose(WebClient client)
+        public static (bool status, WebClient.HttpCodes code, string reason) JoinRoom(WebClient client)
         {
-            Rooms.TryRemove(client.Channel.Id, out var room);
-            room.KickAll();
+            if (!client.IsBroadcaster)
+            {
+                if (!Rooms.ContainsKey(client.Channel.Id))
+                    return (false, WebClient.HttpCodes.Code404, $"Room '{client.Channel.Login}' didn't exists.");
+
+                var success = Rooms[client.Channel.Id].AddViewer(client);
+
+                if (success) return (true, WebClient.HttpCodes.Code200, "");
+                else return (false, WebClient.HttpCodes.Code500, "");
+            }
+            else return (false, WebClient.HttpCodes.Code401, "Client not a viewer");
+        }
+
+        public static async Task RemoveRoom(int id)
+        {
+            Rooms.TryRemove(id, out var removedRoom);
+            await removedRoom.KickAll();
         }
 
         public static async Task<string> GetToken()

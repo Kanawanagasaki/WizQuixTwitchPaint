@@ -86,6 +86,15 @@ namespace WizQuixTwitchPaintApiService.Logic
                     Canvas[ix, iy] = Colors[Colors.Count - 2];
                 }
             }
+
+            broadcaster.JoinedRoom = this;
+            broadcaster.OnConnectionClose += Broadcaster_OnConnectionClose;
+            broadcaster.InitCommands();
+        }
+
+        private void Broadcaster_OnConnectionClose(WebClient client)
+        {
+            Hub.RemoveRoom(client.Channel.Id);
         }
 
         public async Task<SetPixelErrors> SetPixel(WebClient client, string coords, string colorname)
@@ -209,10 +218,17 @@ namespace WizQuixTwitchPaintApiService.Logic
             return $"data:image/png;base64,{ret}";
         }
 
-        public void AddViewer(WebClient client)
+        public bool AddViewer(WebClient client)
         {
-            Viewers.TryAdd(client.User.Id, client);
-            client.OnConnectionClose += Client_OnConnectionClose;
+            if(client.User != null)
+            {
+                Viewers.TryAdd(client.User.Id, client);
+                client.JoinedRoom = this;
+                client.OnConnectionClose += Client_OnConnectionClose;
+                client.InitCommands();
+                return true;
+            }
+            return false;
         }
 
         private void Client_OnConnectionClose(WebClient client)
@@ -238,13 +254,18 @@ namespace WizQuixTwitchPaintApiService.Logic
             }
         }
 
-        public async Task KickAll()
+        public async Task KickViewers()
         {
-            foreach(var viewer in Viewers.Values)
+            foreach (var viewer in Viewers.Values)
             {
-                await viewer.SendMessage("disconnect");
                 await viewer.Close();
             }
+        }
+
+        public async Task KickAll()
+        {
+            await KickViewers();
+            await Broadcaster.Close();
         }
 
         private List<(string coord, string color)> ParseCanvas(string data)

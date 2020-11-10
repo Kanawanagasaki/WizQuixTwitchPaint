@@ -23,12 +23,12 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
         {
             if(args.Length < 1)
             {
-                await Client.SendMessage("error setbackground 400 Wrong number of arguments");
+                await SendError(WebClient.HttpCodes.Code400, "Wrong number of arguments");
                 return;
             }
             bool res = await Client.JoinedRoom.SetBackground(string.Join(" ", args));
-            if(res) await Client.SendMessage("info setbackground OK");
-            else await Client.SendMessage("error setbackground 400 Bad base64 encoding");
+            if(res) await SendInfo();
+            else await SendError(WebClient.HttpCodes.Code400, "Bad base64 encoding");
         }
     }
 }

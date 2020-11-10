@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30517.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WizQuixTwitchPaint", "WizQuixTwitchPaint\WizQuixTwitchPaint.csproj", "{4972C2BB-57B3-4D87-BC91-B9DD599A864A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WizQuixTwitchPaintApiService", "WizQuixTwitchPaintApiService\WizQuixTwitchPaintApiService.csproj", "{E49D72E5-5F5C-42D1-89F8-63E3580FDEB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WizQuixTwitchPaintApiService", "WizQuixTwitchPaintApiService\WizQuixTwitchPaintApiService.csproj", "{E49D72E5-5F5C-42D1-89F8-63E3580FDEB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{4F41B907-7692-451B-B755-AC968B51BDC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{E49D72E5-5F5C-42D1-89F8-63E3580FDEB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E49D72E5-5F5C-42D1-89F8-63E3580FDEB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E49D72E5-5F5C-42D1-89F8-63E3580FDEB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F41B907-7692-451B-B755-AC968B51BDC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F41B907-7692-451B-B755-AC968B51BDC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F41B907-7692-451B-B755-AC968B51BDC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F41B907-7692-451B-B755-AC968B51BDC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

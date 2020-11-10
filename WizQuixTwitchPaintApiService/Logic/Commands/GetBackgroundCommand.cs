@@ -15,7 +15,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
 
         public override async Task Execute(string[] args)
         {
-            await Client.SendMessage($"info getbackground {Client.JoinedRoom.Background}");
+            await SendInfo(Client.JoinedRoom.Background);
         }
     }
 }

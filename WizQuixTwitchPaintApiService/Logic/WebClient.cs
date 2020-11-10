@@ -39,8 +39,16 @@ namespace WizQuixTwitchPaintApiService.Logic
             this.IsConnected = true;
         }
 
-        public void Init()
+        public void InitIdentification()
         {
+            _commands.Add(new CreateRoomCommand(this));
+            _commands.Add(new JoinRoomCommand(this));
+        }
+
+        public void InitCommands()
+        {
+            _commands.Clear();
+
             _commands.Add(new SetPixelCommand(this));
             _commands.Add(new GetColorsCommand(this));
             _commands.Add(new GetBackgroundCommand(this));
@@ -76,6 +84,10 @@ namespace WizQuixTwitchPaintApiService.Logic
                         {
                             await command.Execute(parts.Skip(1).ToArray());
                         }
+                        else
+                        {
+                            await SendError(parts[0].ToLower(), HttpCodes.Code404, $"Command '{parts[0].ToLower()}' didn't exists");
+                        }
                     }
 
                     _rawCommands.RemoveAt(0);
@@ -83,50 +95,45 @@ namespace WizQuixTwitchPaintApiService.Logic
             }
         }
 
-        //setme <{broadcaster|viewer}> <{channelid:int|channelname:string}> [<{userid:int|username:string}>]
-        public async Task Identify()
+        public async Task SetChannel(string nickname)
         {
-            string packet = await ReadPacket();
-            string command = packet.ToLower();
+            var twitchUser = await GetUser(nickname);
+            Channel = twitchUser;
+        }
 
-            int indexOfNull = command.IndexOf("\0");
-            if (indexOfNull >= 0) command = command.Substring(0, indexOfNull);
+        public async Task SetChannel(int userid)
+        {
+            var twitchUser = await GetUser(userid);
+            Channel = twitchUser;
+        }
 
-            string[] split = command.Split(' ');
+        public async Task SetUser(string nickname)
+        {
+            var twitchUser = await GetUser(nickname);
+            User = twitchUser;
+        }
 
-            if (split.Length < 3) return;
-            if (split[0] != "setme") return;
+        public async Task SetUser(int userid)
+        {
+            var twitchUser = await GetUser(userid);
+            User = twitchUser;
+        }
 
-            if (int.TryParse(split[2], out var channelId))
-                Channel = await GetUser(channelId);
-            else
-                Channel = await GetUser(split[2]);
+        public void Identify(bool isBroadcaster)
+        {
+            IsBroadcaster = isBroadcaster;
+            IsIdentified = true;
+        }
 
-            if (split[1] == "broadcaster")
-            {
-                IsBroadcaster = true;
-                IsIdentified = true;
-            }
-            else if (split[1] == "viewer")
-            {
-                if (split.Length < 4) return;
-
-                if (int.TryParse(split[3], out var userId))
-                    User = await GetUser(userId);
-                else
-                    User = await GetUser(split[3]);
-
-                IsBroadcaster = false;
-                IsIdentified = true;
-
-            }
-            else return;
+        public bool CheckConnection()
+        {
+            return _socket.State == WebSocketState.Open;
         }
 
         private async Task ReadCommands()
         {
             string packet = await ReadPacket();
-            var split = packet.Split('\0').Where(c=>!string.IsNullOrWhiteSpace(c));
+            var split = packet.Split('\n').Where(c=>!string.IsNullOrWhiteSpace(c));
             _rawCommands.AddRange(split);
         }
 
@@ -157,7 +164,7 @@ namespace WizQuixTwitchPaintApiService.Logic
 
         public async Task SendMessage(string message)
         {
-            if (!message.EndsWith("\0")) message = $"{message}\0";
+            if (!message.EndsWith("\n")) message = $"{message}\n";
             var bytes = Encoding.UTF8.GetBytes(message);
             await _socket.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -203,6 +210,40 @@ namespace WizQuixTwitchPaintApiService.Logic
             }
 
             return ret;
+        }
+
+        public async Task SendInfo(string command, string text = "OK")
+        {
+            await SendMessage($"info {command} {text}\n");
+        }
+
+        public async Task SendError(string command, HttpCodes code, string text)
+        {
+            await SendError(command, (int)code, string.IsNullOrWhiteSpace(text) ? ErrorTexts[code] : text);
+        }
+
+        public async Task SendError(string command, int code, string text)
+        {
+            await SendMessage($"error {command} {code} {text}\n");
+        }
+
+        private static Dictionary<HttpCodes, string> ErrorTexts = new Dictionary<HttpCodes, string>
+        {
+            { HttpCodes.Code400, "Bad Request" },
+            { HttpCodes.Code401, "Unauthorized" },
+            { HttpCodes.Code404, "Not Found" },
+            { HttpCodes.Code409, "Conflict" },
+            { HttpCodes.Code500, "Internal Server Error" }
+        };
+
+        public enum HttpCodes
+        {
+            Code200 = 200,
+            Code400 = 400,
+            Code401 = 401,
+            Code404 = 404,
+            Code409 = 409,
+            Code500 = 500
         }
     }
 }
