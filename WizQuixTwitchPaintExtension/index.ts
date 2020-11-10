@@ -26,4 +26,4 @@ let productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 let testUri = "wss://localhost:5001";
 
 let appDiv = document.getElementById("app");
-let app:App = new App(appDiv, testUri);
+let app:App = new App(appDiv, productUri);

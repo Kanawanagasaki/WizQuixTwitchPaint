@@ -909,5 +909,5 @@ var PalettePanel = (function () {
 var productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 var testUri = "wss://localhost:5001";
 var appDiv = document.getElementById("app");
-var app = new App(appDiv, testUri);
+var app = new App(appDiv, productUri);
 //# sourceMappingURL=index.js.map
