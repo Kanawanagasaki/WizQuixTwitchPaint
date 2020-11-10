@@ -41,6 +41,8 @@ namespace WizQuixTwitchPaintApiService.Logic
 
         public void InitIdentification()
         {
+            _commands.Clear();
+
             _commands.Add(new CreateRoomCommand(this));
             _commands.Add(new JoinRoomCommand(this));
         }
@@ -65,6 +67,7 @@ namespace WizQuixTwitchPaintApiService.Logic
                 _commands.Add(new SetCanvasCommand(this));
                 _commands.Add(new SetTitleCommand(this));
                 _commands.Add(new SetIntervalCommand(this));
+                _commands.Add(new KickCommand(this));
             }
         }
 
@@ -95,6 +98,16 @@ namespace WizQuixTwitchPaintApiService.Logic
                     _rawCommands.RemoveAt(0);
                 }
             }
+        }
+
+        public void ResetIdentify()
+        {
+            InitIdentification();
+            IsIdentified = false;
+            IsBroadcaster = false;
+            Channel = null;
+            User = null;
+            JoinedRoom = null;
         }
 
         public async Task SetChannel(string nickname)
@@ -216,7 +229,7 @@ namespace WizQuixTwitchPaintApiService.Logic
 
         public async Task SendInfo(string command, string text = "OK")
         {
-            await SendMessage($"info {command} {text}\n");
+            await SendMessage($"info {command}{(text == "" ? "" : " " + text)}\n");
         }
 
         public async Task SendError(string command, HttpCodes code, string text)

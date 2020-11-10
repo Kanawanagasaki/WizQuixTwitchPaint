@@ -21,6 +21,7 @@ class WebClient
     public OnTitleChanged:()=>any = undefined;
     public OnConnected:()=>any = undefined;
     public OnMissingRoom:()=>any = undefined;
+    public OnKick:(reasong:string)=>any = undefined;
     public OnDisconnected:()=>any = undefined;
 
     public constructor(uri:string, canvas:Canvas)
@@ -101,6 +102,12 @@ class WebClient
             this.OnMissingRoom();
     }
 
+    public Kicked(reason:string)
+    {
+        if(this.OnKick !== undefined)
+            this.OnKick(reason);
+    }
+
     public Open()
     {
         if(this.IsAuthorized)
@@ -139,7 +146,7 @@ class WebClient
     {
         if(typeof(message.data) === "string")
         {
-            let commands = message.data.split("\0").filter(c=>c!=="");
+            let commands = message.data.split("\n").filter(c=>c!=="");
             for(let i = 0; i < commands.length; i++)
             {
                 this._commands.Execute(commands[i]);

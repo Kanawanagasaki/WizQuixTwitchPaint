@@ -100,9 +100,13 @@ on fail:
 	- error setbackground 400 Interval must be a number
 	- error setbackground 400 Interval must be greater than 0
 
-----------------------------------------------------------------------------------------------------------------------------------------------------
+command: kick <{userid:int|username:string}> [<reason:string>]
+on success: info kick OK
+on fail:
+	- error kick 400 Wrong number of arguments
+	- error kick 404 User not found
 
-commands from server are just proxying from broadcaster to viewers and vice versa
+----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #server:
 
@@ -112,3 +116,4 @@ command: info settitle <image:string> // image is a base64 encoded png image (da
 command: info setcolor <colorname:string> <colorrgb:int>
 command: info clearpalette
 command: info setinterval <interval:int>
+command: info kicked [<reason:string>] // client kicked from room, it can happens because of destroying room, if so reason will be "room_destroyed". connection to hub is still active, client can rejoin or create new room

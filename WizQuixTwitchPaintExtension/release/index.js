@@ -23,6 +23,7 @@ var App = (function () {
         this._palette.OnChange(function () { return _this.OnPaletteChanged(); });
         this._client.OnConnected = function () { return _this.OnConnect(); };
         this._client.OnMissingRoom = function () { return _this.OnMissingRoom(); };
+        this._client.OnKick = function (reasong) { return _this.OnKick(reasong); };
         this._client.OnDisconnected = function () { return _this.OnDisconnect(); };
         this._client.OnBackgroundChanged = function () { return _this.OnBackgroundChanged(); };
         this._client.OnTitleChanged = function () { return _this.OnTitleChanged(); };
@@ -37,14 +38,6 @@ var App = (function () {
         placeholder.style.backgroundRepeat = "repeat";
         placeholder.style.backgroundSize = "contain";
         placeholder.style.backgroundPosition = "center";
-        placeholder.onmouseenter = function () {
-            if (!_this._isDead)
-                _this.AnimateOpasity(1, 150);
-        };
-        placeholder.onmouseleave = function () {
-            if (!_this._isDead)
-                _this.AnimateOpasity(0.2, 150);
-        };
         this._statusPlaceholder = document.createElement("div");
         this._statusPlaceholder.style.position = "absolute";
         this._statusPlaceholder.style.left = "0px";
@@ -123,10 +116,28 @@ var App = (function () {
     };
     App.prototype.OnMissingRoom = function () {
         var _this = this;
-        this._statusPlaceholder.innerText = "Room didn't found";
+        this._statusPlaceholder.innerText = "Room not found...\nBut we are looking for it";
         setTimeout(function () {
             _this._client.TryJoinRoom();
         }, 2000);
+    };
+    App.prototype.OnKick = function (reason) {
+        var _this = this;
+        this._placeholder.innerHTML = "";
+        this._placeholder.append(this._statusPlaceholder);
+        if (reason === "room_destroyed") {
+            this._statusPlaceholder.innerText = "Room has been destroyed\nTrying to rejoin...";
+            setTimeout(function () {
+                _this._client.TryJoinRoom();
+            }, 2000);
+        }
+        else {
+            reason = reason.trim();
+            if (reason.length > 0)
+                this._statusPlaceholder.innerText = "You has been kicked\nReason: " + reason;
+            else
+                this._statusPlaceholder.innerText = "You has been kicked";
+        }
     };
     App.prototype.OnDisconnect = function () {
         var _this = this;
@@ -383,6 +394,7 @@ var WebClient = (function () {
         this.OnTitleChanged = undefined;
         this.OnConnected = undefined;
         this.OnMissingRoom = undefined;
+        this.OnKick = undefined;
         this.OnDisconnected = undefined;
         this._uri = uri;
         this._commands = new Commands(this);
@@ -438,6 +450,10 @@ var WebClient = (function () {
         if (this.OnMissingRoom !== undefined)
             this.OnMissingRoom();
     };
+    WebClient.prototype.Kicked = function (reason) {
+        if (this.OnKick !== undefined)
+            this.OnKick(reason);
+    };
     WebClient.prototype.Open = function () {
         var _this = this;
         if (this.IsAuthorized) {
@@ -464,7 +480,7 @@ var WebClient = (function () {
     };
     WebClient.prototype.OnMessage = function (message) {
         if (typeof (message.data) === "string") {
-            var commands = message.data.split("\0").filter(function (c) { return c !== ""; });
+            var commands = message.data.split("\n").filter(function (c) { return c !== ""; });
             for (var i = 0; i < commands.length; i++) {
                 this._commands.Execute(commands[i]);
             }
@@ -508,6 +524,7 @@ var Commands = (function () {
         this._commands.push(new GetIntervalCommand(client));
         this._commands.push(new GetTitleCommand(client));
         this._commands.push(new JoinRoomCommand(client));
+        this._commands.push(new KickedCommand(client));
         this._commands.push(new SetBackgroundCommand(client));
         this._commands.push(new SetColorCommand(client));
         this._commands.push(new SetIntervalCommand(client));
@@ -660,6 +677,18 @@ var JoinRoomCommand = (function (_super) {
         }
     };
     return JoinRoomCommand;
+}(ACommand));
+var KickedCommand = (function (_super) {
+    __extends(KickedCommand, _super);
+    function KickedCommand(client) {
+        return _super.call(this, "kicked", client) || this;
+    }
+    KickedCommand.prototype.OnInfo = function (data) {
+        this.Client.Kicked(data.join(" "));
+    };
+    KickedCommand.prototype.OnError = function (code, error) {
+    };
+    return KickedCommand;
 }(ACommand));
 var SetIntervalCommand = (function (_super) {
     __extends(SetIntervalCommand, _super);
@@ -909,5 +938,5 @@ var PalettePanel = (function () {
 var productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 var testUri = "wss://localhost:5001";
 var appDiv = document.getElementById("app");
-var app = new App(appDiv, productUri);
+var app = new App(appDiv, testUri);
 //# sourceMappingURL=index.js.map

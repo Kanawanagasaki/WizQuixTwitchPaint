@@ -12,6 +12,7 @@ class Commands
         this._commands.push(new GetIntervalCommand(client));
         this._commands.push(new GetTitleCommand(client));
         this._commands.push(new JoinRoomCommand(client));
+        this._commands.push(new KickedCommand(client));
         this._commands.push(new SetBackgroundCommand(client));
         this._commands.push(new SetColorCommand(client));
         this._commands.push(new SetIntervalCommand(client));

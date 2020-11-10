@@ -146,7 +146,10 @@ namespace WizQuixTwitchPaintApiService.Logic
             }
             else
             {
-                Save();
+                Task.Run(async ()=>
+                {
+                    await Save();
+                });
             }
         }
     }

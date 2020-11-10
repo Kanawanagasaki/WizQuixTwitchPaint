@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
@@ -137,7 +138,7 @@ namespace WizQuixTwitchPaintApiService.Logic
         {
             Task.Run(async ()=>
             {
-                if (!_history.IsEmpty && _history.TryDequeue(out var item))
+                if (!_history.IsEmpty && _history.TryDequeue(out var item) && item.Client.IsConnected && item.Client.IsIdentified)
                 {
                     Canvas[item.X, item.Y] = item.Color;
                     if (item.Client == Broadcaster) await Wideband($"info setpixel {item.Client.Channel.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
@@ -297,18 +298,40 @@ namespace WizQuixTwitchPaintApiService.Logic
             }
         }
 
+        public async Task<bool> Kick(string username, string reason)
+        {
+            var res = Viewers.Values.FirstOrDefault(v => v.User != null && v.User.Login.ToLower() == username.ToLower());
+            if (res != null) return await Kick(res.User.Id, reason);
+            else return false;
+        }
+
+        public async Task<bool> Kick(int id, string reason)
+        {
+            if (Viewers.TryRemove(id, out var viewer))
+            {
+                viewer.ResetIdentify();
+                viewer.OnConnectionClose -= Client_OnConnectionClose;
+                await viewer.SendInfo("kicked", reason);
+                return true;
+            }
+            else return false;
+        }
+
         public async Task KickViewers()
         {
-            foreach (var viewer in Viewers.Values)
+            foreach (var kv in Viewers)
             {
-                await viewer.Close();
+                await Kick(kv.Key, "room_destroyed");
             }
         }
 
         public async Task KickAll()
         {
             await KickViewers();
-            await Broadcaster.Close();
+
+            Broadcaster.ResetIdentify();
+            Broadcaster.OnConnectionClose -= Broadcaster_OnConnectionClose;
+            await Broadcaster.SendInfo("kicked", "room_destroyed");
         }
 
         private List<(string coord, string color)> ParseCanvas(string data)

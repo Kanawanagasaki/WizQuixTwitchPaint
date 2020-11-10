@@ -26,6 +26,7 @@ class App
         this._palette.OnChange(()=>this.OnPaletteChanged());
         this._client.OnConnected = ()=>this.OnConnect();
         this._client.OnMissingRoom = ()=>this.OnMissingRoom();
+        this._client.OnKick = (reasong:string)=>this.OnKick(reasong);
         this._client.OnDisconnected = ()=>this.OnDisconnect();
         this._client.OnBackgroundChanged = () => this.OnBackgroundChanged();
         this._client.OnTitleChanged = () => this.OnTitleChanged();
@@ -41,14 +42,14 @@ class App
         placeholder.style.backgroundRepeat = "repeat";
         placeholder.style.backgroundSize = "contain";
         placeholder.style.backgroundPosition = "center";
-        placeholder.onmouseenter = ()=>
-        {
-            if(!this._isDead) this.AnimateOpasity(1, 150);
-        };
-        placeholder.onmouseleave = ()=>
-        {
-            if(!this._isDead) this.AnimateOpasity(0.2, 150);
-        };
+        // placeholder.onmouseenter = ()=>
+        // {
+        //     if(!this._isDead) this.AnimateOpasity(1, 150);
+        // };
+        // placeholder.onmouseleave = ()=>
+        // {
+        //     if(!this._isDead) this.AnimateOpasity(0.2, 150);
+        // };
 
         this._statusPlaceholder = document.createElement("div");
         this._statusPlaceholder.style.position = "absolute";
@@ -145,11 +146,33 @@ class App
 
     private OnMissingRoom()
     {
-        this._statusPlaceholder.innerText = `Room didn't found`;
+        this._statusPlaceholder.innerText = `Room not found...\nBut we are looking for it`;
         setTimeout(()=>
         {
             this._client.TryJoinRoom();
         }, 2000);
+    }
+
+    private OnKick(reason:string)
+    {
+        this._placeholder.innerHTML = "";
+        this._placeholder.append(this._statusPlaceholder);
+        if(reason === "room_destroyed")
+        {
+            this._statusPlaceholder.innerText = "Room has been destroyed\nTrying to rejoin...";
+            setTimeout(()=>
+            {
+                this._client.TryJoinRoom();
+            }, 2000);
+        }
+        else
+        {
+            reason = reason.trim();
+            if(reason.length > 0)
+                this._statusPlaceholder.innerText = "You has been kicked\nReason: " + reason;
+            else
+                this._statusPlaceholder.innerText = "You has been kicked";
+        }
     }
 
     private OnDisconnect()
