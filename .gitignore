@@ -1,5 +1,7 @@
 .vs
 .vs/*
+packages
+packages/*
 WizQuixTwitchPaint/bin/Debug
 WizQuixTwitchPaint/bin/Debug/*
 WizQuixTwitchPaint/obj
@@ -12,5 +14,7 @@ WizQuixTwitchPaintApiService/settings.json
 WizQuixTwitchPaintApiService/Properties
 WizQuixTwitchPaintApiService/Properties/*
 WizQuixTwitchPaintExtension/release/WizQuixPaint.json
+WizQuixTwitchPaintExtension/node_modules
+WizQuixTwitchPaintExtension/node_modules/*
 Test
 Test/*

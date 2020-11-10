@@ -5,6 +5,8 @@ class App
     private _canvasPlaceholder:HTMLElement;
     private _titlePlaceholder:HTMLElement;
     private _statusPlaceholder:HTMLElement;
+    private _iconStatusPlaceholder:HTMLElement;
+    private _iconImg:HTMLImageElement;
 
     private _palettePanel:PalettePanel;
     private _canvasPanel:CanvasPanel;
@@ -16,6 +18,9 @@ class App
     private _animationInterval = undefined;
     private _loadedData:number = 0;
     private _isDead:boolean = false;
+
+    public Size:number = 600;
+    public Percent:number = 0.75;
 
     public constructor(placeholder:HTMLElement, uri:string)
     {
@@ -36,20 +41,12 @@ class App
         placeholder.style.position = "absolute";
         placeholder.style.top = "10%";
         placeholder.style.right = "0px";
-        placeholder.style.width = "600px";
-        placeholder.style.height = "600px";
+        placeholder.style.width = "100px";
+        placeholder.style.height = "100px";
         placeholder.style.borderRadius = "5px";
         placeholder.style.backgroundRepeat = "repeat";
         placeholder.style.backgroundSize = "contain";
         placeholder.style.backgroundPosition = "center";
-        // placeholder.onmouseenter = ()=>
-        // {
-        //     if(!this._isDead) this.AnimateOpasity(1, 150);
-        // };
-        // placeholder.onmouseleave = ()=>
-        // {
-        //     if(!this._isDead) this.AnimateOpasity(0.2, 150);
-        // };
 
         this._statusPlaceholder = document.createElement("div");
         this._statusPlaceholder.style.position = "absolute";
@@ -64,36 +61,121 @@ class App
         this._statusPlaceholder.style.justifyContent = "center";
         this._statusPlaceholder.style.alignItems = "center";
         this._statusPlaceholder.style.textAlign = "center";
+        this._statusPlaceholder.style.display = "none";
         this._statusPlaceholder.innerText = "Connecting to Hub...";
+
+        this._iconImg = document.createElement("img");
+        this._iconImg.style.width = "100%";
+        this._iconImg.style.height = "100%";
+        this._iconImg.src = "loading.gif";
+
+        this._iconStatusPlaceholder = document.createElement("div");
+        this._iconStatusPlaceholder.style.position = "absolute";
+        this._iconStatusPlaceholder.style.left = "0px";
+        this._iconStatusPlaceholder.style.top = "0px";
+        this._iconStatusPlaceholder.style.right = "0px";
+        this._iconStatusPlaceholder.style.bottom = "0px";
+        this._iconStatusPlaceholder.style.padding = "20px";
+        this._iconStatusPlaceholder.style.display = "flex";
+        this._iconStatusPlaceholder.style.justifyContent = "center";
+        this._iconStatusPlaceholder.style.alignItems = "center";
+        this._iconStatusPlaceholder.style.textAlign = "center";
+        this._iconStatusPlaceholder.append(this._iconImg);
+
+        this._canvasPlaceholder = document.createElement("div");
+        this._canvasPlaceholder.style.position = "absolute";
+        this._canvasPlaceholder.style.left = "0px";
+        this._canvasPlaceholder.style.bottom = "0px";
+        this._canvasPlaceholder.style.width = "100%";
+        this._canvasPlaceholder.style.height = "100%";
+        this._canvasPlaceholder.style.cursor = "pointer";
 
         this._palettePlaceholder = document.createElement("div");
         this._palettePlaceholder.style.position = "absolute";
         this._palettePlaceholder.style.right = "0px";
         this._palettePlaceholder.style.top = "0px";
         this._palettePlaceholder.style.bottom = "0px";
-        this._palettePlaceholder.style.width = "25%";
-
-        this._canvasPlaceholder = document.createElement("div");
-        this._canvasPlaceholder.style.position = "absolute";
-        this._canvasPlaceholder.style.left = "0px";
-        this._canvasPlaceholder.style.bottom = "0px";
-        this._canvasPlaceholder.style.width = "75%";
-        this._canvasPlaceholder.style.height = "75%";
+        this._palettePlaceholder.style.width = Math.round((1-this.Percent) * 100) + "%";
+        this._palettePlaceholder.style.display = "none";
 
         this._titlePlaceholder = document.createElement("div");
         this._titlePlaceholder.style.position = "absolute";
         this._titlePlaceholder.style.left = "0px";
         this._titlePlaceholder.style.top = "0px";
-        this._titlePlaceholder.style.width = "75%";
-        this._titlePlaceholder.style.height = "25%";
+        this._titlePlaceholder.style.width = Math.round(this.Percent * 100) + "%";
+        this._titlePlaceholder.style.height = Math.round((1-this.Percent) * 100) + "%";
         this._titlePlaceholder.style.backgroundRepeat = "no-repeat";
         this._titlePlaceholder.style.backgroundSize = "contain";
         this._titlePlaceholder.style.backgroundPosition = "left";
+        this._titlePlaceholder.style.display = "none";
 
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
 
         this._palettePanel = new PalettePanel(this._palettePlaceholder, this._palette);
-        this._canvasPanel = new CanvasPanel(this._canvasPlaceholder, this._canvas);
+        this._canvasPanel = new CanvasPanel(this, this._canvasPlaceholder, this._canvas);
+
+        document.body.onclick = (e)=>
+        {
+            if($(this._placeholder).has(e.target as Element).length)
+            {
+                if(this._placeholder.style.width != this.Size + "px")
+                {
+                    this.Animate(1, 0, (op)=>
+                    {
+                        let size:number = this.Size - op * (this.Size - 100);
+                        this._placeholder.style.width = size + "px";
+                        this._placeholder.style.height = size + "px";
+
+                        let percent = this.Percent + op * (1 - this.Percent);
+                        this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                        this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+
+                        if(op<0.9)
+                        {
+                            this._titlePlaceholder.style.display = "";
+                            this._palettePlaceholder.style.display = "";
+                        }
+                        if(op<0.5)
+                        {
+                            this._statusPlaceholder.style.display = "flex";
+                            this._iconStatusPlaceholder.style.display = "none";
+                        }
+
+                        this._canvasPanel.DrawCoords = size > 300;
+                    }, 100);
+                }
+            }
+            else
+            {
+                if(this._placeholder.style.width != "100px")
+                {
+                    this.Animate(0, 1, (op)=>
+                    {
+                        let size:number = this.Size - op * (this.Size - 100);
+                        this._placeholder.style.width = size + "px";
+                        this._placeholder.style.height = size + "px";
+
+                        let percent = this.Percent + op * (1 - this.Percent);
+                        this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                        this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+
+                        if(op>0.9)
+                        {
+                            this._titlePlaceholder.style.display = "none";
+                            this._palettePlaceholder.style.display = "none";
+                        }
+                        if(op>0.5)
+                        {
+                            this._statusPlaceholder.style.display = "none";
+                            this._iconStatusPlaceholder.style.display = "flex";
+                        }
+
+                        this._canvasPanel.DrawCoords = size > 300;
+                    }, 100);
+                }
+            }
+        }
     }
 
     private OnBackgroundChanged()
@@ -157,6 +239,7 @@ class App
     {
         this._placeholder.innerHTML = "";
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
         if(reason === "room_destroyed")
         {
             this._statusPlaceholder.innerText = "Room has been destroyed\nTrying to rejoin...";
@@ -167,6 +250,7 @@ class App
         }
         else
         {
+            this._iconImg.src = "disconnected.png";
             reason = reason.trim();
             if(reason.length > 0)
                 this._statusPlaceholder.innerText = "You has been kicked\nReason: " + reason;
@@ -179,11 +263,14 @@ class App
     {
         this._placeholder.innerHTML = "";
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
         this._statusPlaceholder.innerText = "Unable to establish connection to hub";
         this._isDead = true;
         setTimeout(()=>
         {
-            this.AnimateOpasity(0, 200);
+            let start = parseFloat(this._placeholder.style.opacity);
+            if(isNaN(start)) start = 1;
+            this.Animate(start, 0, (op)=>this._placeholder.style.opacity=op, 200);
         }, 2000);
         setTimeout(()=>
         {
@@ -191,42 +278,32 @@ class App
         }, 2200);
     }
 
-    private AnimateOpasity(opacity:number, time:number)
+    private Animate(start:number, finist:number, applyF:(number)=>any, time:number)
     {
         if(this._animationInterval !== undefined)
             clearInterval(this._animationInterval);
 
-        opacity = Math.max(0, opacity);
-        opacity = Math.min(1, opacity);
+        let step = Math.abs((start - finist) / (time / 10));
 
-        let start = parseFloat(this._placeholder.style.opacity);
-        if(isNaN(start))
-        {
-            this._placeholder.style.opacity = '1';
-            start = 1;
-        }
-
-        let step = Math.abs((start - opacity) / (time / 20));
-
+        let current = start;
         this._animationInterval = setInterval(()=>
         {
-            let current = parseFloat(this._placeholder.style.opacity);
-            if(start > opacity)
+            if(start > finist)
             {
-                if(current > opacity)
+                if(current > finist)
                     current -= step;
                 else
                     clearInterval(this._animationInterval);
-                this._placeholder.style.opacity = `${Math.max(current, opacity)}`;
+                applyF(Math.max(current, finist));
             }
             else
             {
-                if(current < opacity)
+                if(current < finist)
                     current += step;
                 else
                     clearInterval(this._animationInterval);
-                this._placeholder.style.opacity = `${Math.min(current, opacity)}`;
+                applyF(Math.min(current, finist));
             }
-        }, 20);
+        }, 10);
     }
 }

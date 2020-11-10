@@ -17,6 +17,8 @@ var App = (function () {
         this._animationInterval = undefined;
         this._loadedData = 0;
         this._isDead = false;
+        this.Size = 600;
+        this.Percent = 0.75;
         this._palette = new Palette();
         this._canvas = new Canvas(this._palette);
         this._client = new WebClient(uri, this._canvas);
@@ -32,8 +34,8 @@ var App = (function () {
         placeholder.style.position = "absolute";
         placeholder.style.top = "10%";
         placeholder.style.right = "0px";
-        placeholder.style.width = "600px";
-        placeholder.style.height = "600px";
+        placeholder.style.width = "100px";
+        placeholder.style.height = "100px";
         placeholder.style.borderRadius = "5px";
         placeholder.style.backgroundRepeat = "repeat";
         placeholder.style.backgroundSize = "contain";
@@ -51,31 +53,96 @@ var App = (function () {
         this._statusPlaceholder.style.justifyContent = "center";
         this._statusPlaceholder.style.alignItems = "center";
         this._statusPlaceholder.style.textAlign = "center";
+        this._statusPlaceholder.style.display = "none";
         this._statusPlaceholder.innerText = "Connecting to Hub...";
+        this._iconImg = document.createElement("img");
+        this._iconImg.style.width = "100%";
+        this._iconImg.style.height = "100%";
+        this._iconImg.src = "loading.gif";
+        this._iconStatusPlaceholder = document.createElement("div");
+        this._iconStatusPlaceholder.style.position = "absolute";
+        this._iconStatusPlaceholder.style.left = "0px";
+        this._iconStatusPlaceholder.style.top = "0px";
+        this._iconStatusPlaceholder.style.right = "0px";
+        this._iconStatusPlaceholder.style.bottom = "0px";
+        this._iconStatusPlaceholder.style.padding = "20px";
+        this._iconStatusPlaceholder.style.display = "flex";
+        this._iconStatusPlaceholder.style.justifyContent = "center";
+        this._iconStatusPlaceholder.style.alignItems = "center";
+        this._iconStatusPlaceholder.style.textAlign = "center";
+        this._iconStatusPlaceholder.append(this._iconImg);
+        this._canvasPlaceholder = document.createElement("div");
+        this._canvasPlaceholder.style.position = "absolute";
+        this._canvasPlaceholder.style.left = "0px";
+        this._canvasPlaceholder.style.bottom = "0px";
+        this._canvasPlaceholder.style.width = "100%";
+        this._canvasPlaceholder.style.height = "100%";
+        this._canvasPlaceholder.style.cursor = "pointer";
         this._palettePlaceholder = document.createElement("div");
         this._palettePlaceholder.style.position = "absolute";
         this._palettePlaceholder.style.right = "0px";
         this._palettePlaceholder.style.top = "0px";
         this._palettePlaceholder.style.bottom = "0px";
-        this._palettePlaceholder.style.width = "25%";
-        this._canvasPlaceholder = document.createElement("div");
-        this._canvasPlaceholder.style.position = "absolute";
-        this._canvasPlaceholder.style.left = "0px";
-        this._canvasPlaceholder.style.bottom = "0px";
-        this._canvasPlaceholder.style.width = "75%";
-        this._canvasPlaceholder.style.height = "75%";
+        this._palettePlaceholder.style.width = Math.round((1 - this.Percent) * 100) + "%";
+        this._palettePlaceholder.style.display = "none";
         this._titlePlaceholder = document.createElement("div");
         this._titlePlaceholder.style.position = "absolute";
         this._titlePlaceholder.style.left = "0px";
         this._titlePlaceholder.style.top = "0px";
-        this._titlePlaceholder.style.width = "75%";
-        this._titlePlaceholder.style.height = "25%";
+        this._titlePlaceholder.style.width = Math.round(this.Percent * 100) + "%";
+        this._titlePlaceholder.style.height = Math.round((1 - this.Percent) * 100) + "%";
         this._titlePlaceholder.style.backgroundRepeat = "no-repeat";
         this._titlePlaceholder.style.backgroundSize = "contain";
         this._titlePlaceholder.style.backgroundPosition = "left";
+        this._titlePlaceholder.style.display = "none";
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
         this._palettePanel = new PalettePanel(this._palettePlaceholder, this._palette);
-        this._canvasPanel = new CanvasPanel(this._canvasPlaceholder, this._canvas);
+        this._canvasPanel = new CanvasPanel(this, this._canvasPlaceholder, this._canvas);
+        document.body.onclick = function (e) {
+            if ($(_this._placeholder).has(e.target).length) {
+                if (_this._placeholder.style.width != _this.Size + "px") {
+                    _this.Animate(1, 0, function (op) {
+                        var size = _this.Size - op * (_this.Size - 100);
+                        _this._placeholder.style.width = size + "px";
+                        _this._placeholder.style.height = size + "px";
+                        var percent = _this.Percent + op * (1 - _this.Percent);
+                        _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                        _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+                        if (op < 0.9) {
+                            _this._titlePlaceholder.style.display = "";
+                            _this._palettePlaceholder.style.display = "";
+                        }
+                        if (op < 0.5) {
+                            _this._statusPlaceholder.style.display = "flex";
+                            _this._iconStatusPlaceholder.style.display = "none";
+                        }
+                        _this._canvasPanel.DrawCoords = size > 300;
+                    }, 100);
+                }
+            }
+            else {
+                if (_this._placeholder.style.width != "100px") {
+                    _this.Animate(0, 1, function (op) {
+                        var size = _this.Size - op * (_this.Size - 100);
+                        _this._placeholder.style.width = size + "px";
+                        _this._placeholder.style.height = size + "px";
+                        var percent = _this.Percent + op * (1 - _this.Percent);
+                        _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                        _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+                        if (op > 0.9) {
+                            _this._titlePlaceholder.style.display = "none";
+                            _this._palettePlaceholder.style.display = "none";
+                        }
+                        if (op > 0.5) {
+                            _this._statusPlaceholder.style.display = "none";
+                            _this._iconStatusPlaceholder.style.display = "flex";
+                        }
+                        _this._canvasPanel.DrawCoords = size > 300;
+                    }, 100);
+                }
+            }
+        };
     }
     App.prototype.OnBackgroundChanged = function () {
         var img = new Image();
@@ -125,6 +192,7 @@ var App = (function () {
         var _this = this;
         this._placeholder.innerHTML = "";
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
         if (reason === "room_destroyed") {
             this._statusPlaceholder.innerText = "Room has been destroyed\nTrying to rejoin...";
             setTimeout(function () {
@@ -132,6 +200,7 @@ var App = (function () {
             }, 2000);
         }
         else {
+            this._iconImg.src = "disconnected.png";
             reason = reason.trim();
             if (reason.length > 0)
                 this._statusPlaceholder.innerText = "You has been kicked\nReason: " + reason;
@@ -143,44 +212,41 @@ var App = (function () {
         var _this = this;
         this._placeholder.innerHTML = "";
         this._placeholder.append(this._statusPlaceholder);
+        this._placeholder.append(this._iconStatusPlaceholder);
         this._statusPlaceholder.innerText = "Unable to establish connection to hub";
         this._isDead = true;
         setTimeout(function () {
-            _this.AnimateOpasity(0, 200);
+            var start = parseFloat(_this._placeholder.style.opacity);
+            if (isNaN(start))
+                start = 1;
+            _this.Animate(start, 0, function (op) { return _this._placeholder.style.opacity = op; }, 200);
         }, 2000);
         setTimeout(function () {
             _this._placeholder.innerHTML = "";
         }, 2200);
     };
-    App.prototype.AnimateOpasity = function (opacity, time) {
+    App.prototype.Animate = function (start, finist, applyF, time) {
         var _this = this;
         if (this._animationInterval !== undefined)
             clearInterval(this._animationInterval);
-        opacity = Math.max(0, opacity);
-        opacity = Math.min(1, opacity);
-        var start = parseFloat(this._placeholder.style.opacity);
-        if (isNaN(start)) {
-            this._placeholder.style.opacity = '1';
-            start = 1;
-        }
-        var step = Math.abs((start - opacity) / (time / 20));
+        var step = Math.abs((start - finist) / (time / 10));
+        var current = start;
         this._animationInterval = setInterval(function () {
-            var current = parseFloat(_this._placeholder.style.opacity);
-            if (start > opacity) {
-                if (current > opacity)
+            if (start > finist) {
+                if (current > finist)
                     current -= step;
                 else
                     clearInterval(_this._animationInterval);
-                _this._placeholder.style.opacity = "" + Math.max(current, opacity);
+                applyF(Math.max(current, finist));
             }
             else {
-                if (current < opacity)
+                if (current < finist)
                     current += step;
                 else
                     clearInterval(_this._animationInterval);
-                _this._placeholder.style.opacity = "" + Math.min(current, opacity);
+                applyF(Math.min(current, finist));
             }
-        }, 20);
+        }, 10);
     };
     return App;
 }());
@@ -746,16 +812,18 @@ var SetTitleCommand = (function (_super) {
     return SetTitleCommand;
 }(ACommand));
 var CanvasPanel = (function () {
-    function CanvasPanel(placeholder, canvas) {
+    function CanvasPanel(app, placeholder, canvas) {
         var _this = this;
-        this._width = 450;
-        this._height = 450;
         this._padding = 4;
         this._mouseX = -1;
         this._mouseY = -1;
         this._isMouseDown = false;
+        this.DrawCoords = false;
+        this._app = app;
         this._placehloder = placeholder;
         this._canvas = canvas;
+        this._width = Math.round(app.Size * app.Percent);
+        this._height = Math.round(app.Size * app.Percent);
         this._htmlCanvas = document.createElement("canvas");
         this._htmlCanvas.style.width = "100%";
         this._htmlCanvas.style.height = "100%";
@@ -774,15 +842,17 @@ var CanvasPanel = (function () {
         this._context.clearRect(0, 0, this._width, this._height);
         var w = this._width - this._padding * 2;
         var h = this._height - this._padding * 2;
-        var itemW = Math.floor(w / (Canvas.Width + 1));
-        var itemH = Math.floor(h / (Canvas.Height + 1));
+        var itemW = w / (Canvas.Width + (this.DrawCoords ? 1 : 0));
+        var itemH = h / (Canvas.Height + (this.DrawCoords ? 1 : 0));
         for (var iy = 0; iy < Canvas.Height; iy++) {
             for (var ix = 0; ix < Canvas.Width; ix++) {
-                if (this._mouseX == ix && this._mouseY == iy)
+                if (this.DrawCoords && this._mouseX == ix && this._mouseY == iy)
                     this._context.fillStyle = this._canvas.Palette.GetSelectedColor().Hex;
                 else
                     this._context.fillStyle = this._canvas.GetPixel(ix, iy).Hex;
-                this._context.fillRect(this._padding + itemW + ix * itemW, this._padding + iy * itemH, itemW, itemH);
+                var x = this._padding + (this.DrawCoords ? itemW : 0) + ix * itemW;
+                var y = this._padding + iy * itemH;
+                this._context.fillRect(x - 1, y - 1, itemW + 1, itemH + 1);
             }
         }
         try {
@@ -793,33 +863,39 @@ var CanvasPanel = (function () {
             this._context.fillStyle = "#FFFFFF";
         }
         catch (ex) { }
-        for (var i = 0; i < Canvas.Height; i++) {
-            var x = itemW * 0.65;
-            var y = i * itemH + itemH * 0.75;
-            var text = "" + (i + 1);
-            try {
-                this._context.fillText(text, x, y);
+        if (this.DrawCoords) {
+            for (var i = 0; i < Canvas.Height; i++) {
+                var x = itemW * 0.5 + 2;
+                var y = i * itemH + itemH * 0.5 + 5;
+                var text = "" + (i + 1);
+                try {
+                    this._context.fillText(text, x, y);
+                }
+                catch (ex) { }
             }
-            catch (ex) { }
-        }
-        for (var i = 0; i < Canvas.Width; i++) {
-            var x = itemW * 1.65 + i * itemW;
-            var y = Canvas.Height * itemH + itemH * 0.75;
-            var text = this._canvas.GetVerticalCoord(i);
-            try {
-                this._context.fillText(text, x, y);
+            for (var i = 0; i < Canvas.Width; i++) {
+                var x = itemW * 1.5 + i * itemW + 3;
+                var y = Canvas.Height * itemH + itemH * 0.5 + 5;
+                var text = this._canvas.GetVerticalCoord(i);
+                try {
+                    this._context.fillText(text, x, y);
+                }
+                catch (ex) { }
             }
-            catch (ex) { }
         }
         this._context.lineWidth = 2;
         this._context.strokeStyle = "#FFFFFF";
-        this._context.strokeRect(this._padding + itemW, this._padding, w - itemW, h - itemH);
-        if (this._mouseX >= 0 && this._mouseX < Canvas.Width && this._mouseY >= 0 && this._mouseY < Canvas.Height) {
+        this._context.strokeRect(this._padding + (this.DrawCoords ? itemW : 0), this._padding, w - (this.DrawCoords ? itemW : 0), h - (this.DrawCoords ? itemW : 0));
+        if (this.DrawCoords &&
+            this._mouseX >= 0 && this._mouseX < Canvas.Width &&
+            this._mouseY >= 0 && this._mouseY < Canvas.Height) {
             this._context.strokeStyle = "#FFFF33";
             this._context.strokeRect(this._padding + itemW + this._mouseX * itemW, this._padding + this._mouseY * itemH, itemW, itemH);
         }
     };
     CanvasPanel.prototype.OnMouseMove = function (evt) {
+        if (!this.DrawCoords)
+            return;
         this.CalculateMouseCoord(evt);
         if (this._mouseX >= 0 && this._mouseX < Canvas.Width &&
             this._mouseY >= 0 && this._mouseY < Canvas.Height &&
@@ -833,6 +909,8 @@ var CanvasPanel = (function () {
         this._isMouseDown = false;
     };
     CanvasPanel.prototype.OnMouseDown = function (evt) {
+        if (!this.DrawCoords)
+            return;
         this.CalculateMouseCoord(evt);
         this._isMouseDown = true;
         if (this._mouseX >= 0 && this._mouseX < Canvas.Width &&
@@ -870,14 +948,14 @@ var PalettePanel = (function () {
         this._paddingPlaceholder = document.createElement("div");
         this._paddingPlaceholder.style.position = "absolute";
         this._paddingPlaceholder.style.overflowY = "auto";
-        this._paddingPlaceholder.style.padding = "8px";
         this._paddingPlaceholder.style.top = "0px";
         this._paddingPlaceholder.style.left = "0px";
         this._paddingPlaceholder.style.bottom = "0px";
-        this._paddingPlaceholder.style.right = "0px";
+        this._paddingPlaceholder.style.right = "-17px";
         this._paddingPlaceholder.style.color = "white";
         this._paddingPlaceholder.style.fontFamily = "monospace";
         this._paddingPlaceholder.style.fontSize = "12px";
+        this._paddingPlaceholder.style.overflowY = "scroll";
         placeholder.append(this._paddingPlaceholder);
         this.DrawColors();
         palette.OnChange(function () { return _this.DrawColors(); });
@@ -891,6 +969,7 @@ var PalettePanel = (function () {
             colorDiv.style.width = "100%";
             colorDiv.style.height = "14px";
             colorDiv.style.cursor = "pointer";
+            colorDiv.style.overflow = "clip";
             if (this_1._palette.SelectedColor === i)
                 colorDiv.style.color = "yellow";
             var colorPreviewDiv = document.createElement("div");

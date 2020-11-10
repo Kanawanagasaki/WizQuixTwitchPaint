@@ -12,14 +12,14 @@ class PalettePanel
         this._paddingPlaceholder = document.createElement("div");
         this._paddingPlaceholder.style.position = "absolute";
         this._paddingPlaceholder.style.overflowY = "auto";
-        this._paddingPlaceholder.style.padding = "8px";
         this._paddingPlaceholder.style.top = "0px";
         this._paddingPlaceholder.style.left = "0px";
         this._paddingPlaceholder.style.bottom = "0px";
-        this._paddingPlaceholder.style.right = "0px";
+        this._paddingPlaceholder.style.right = "-17px";
         this._paddingPlaceholder.style.color = "white";
         this._paddingPlaceholder.style.fontFamily = "monospace";
         this._paddingPlaceholder.style.fontSize = "12px";
+        this._paddingPlaceholder.style.overflowY = "scroll";
 
         placeholder.append(this._paddingPlaceholder);
 
@@ -38,6 +38,7 @@ class PalettePanel
             colorDiv.style.width = "100%";
             colorDiv.style.height = "14px";
             colorDiv.style.cursor = "pointer";
+            colorDiv.style.overflow = "clip";
             if(this._palette.SelectedColor === i)
                 colorDiv.style.color = "yellow";
 

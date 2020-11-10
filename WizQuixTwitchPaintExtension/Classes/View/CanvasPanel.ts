@@ -5,18 +5,25 @@ class CanvasPanel
     private _htmlCanvas:HTMLCanvasElement;
     private _context:CanvasRenderingContext2D;
 
-    private _width:number = 450;
-    private _height:number = 450;
+    private _app:App;
+    private _width:number;
+    private _height:number;
     private _padding:number = 4;
 
     private _mouseX:number = -1;
     private _mouseY:number = -1;
     private _isMouseDown:boolean = false;
 
-    public constructor(placeholder:HTMLElement, canvas:Canvas)
+    public DrawCoords:boolean = false;
+
+    public constructor(app:App, placeholder:HTMLElement, canvas:Canvas)
     {
+        this._app = app;
         this._placehloder = placeholder;
         this._canvas = canvas;
+
+        this._width = Math.round(app.Size * app.Percent);
+        this._height = Math.round(app.Size * app.Percent);
 
         this._htmlCanvas = document.createElement("canvas");
         this._htmlCanvas.style.width = "100%";
@@ -45,18 +52,21 @@ class CanvasPanel
         let w = this._width - this._padding * 2;
         let h = this._height - this._padding * 2;
 
-        let itemW = Math.floor(w / (Canvas.Width + 1));
-        let itemH = Math.floor(h / (Canvas.Height + 1));
+        let itemW = w / (Canvas.Width + (this.DrawCoords?1:0));
+        let itemH = h / (Canvas.Height + (this.DrawCoords?1:0));
 
         for(let iy = 0; iy < Canvas.Height; iy++)
         {
             for(let ix = 0; ix < Canvas.Width; ix++)
             {
-                if(this._mouseX == ix && this._mouseY == iy)
+                if(this.DrawCoords && this._mouseX == ix && this._mouseY == iy)
                     this._context.fillStyle = this._canvas.Palette.GetSelectedColor().Hex;
                 else
                     this._context.fillStyle = this._canvas.GetPixel(ix, iy).Hex;
-                this._context.fillRect(this._padding + itemW + ix * itemW, this._padding + iy * itemH, itemW, itemH);
+
+                let x = this._padding + (this.DrawCoords ? itemW : 0) + ix * itemW;
+                let y = this._padding + iy * itemH;
+                this._context.fillRect(x-1, y-1, itemW+1, itemH+1);
             }
         }
 
@@ -64,44 +74,49 @@ class CanvasPanel
         {
             this._context.lineWidth = 1;
             this._context.textAlign = "center";
-            this._context.textBaseline = "middle"; 
+            this._context.textBaseline = "middle";
             this._context.font = "normal 12px monospace";
             this._context.fillStyle = "#FFFFFF";
         }
         catch(ex) {}
 
-        for(let i = 0; i < Canvas.Height; i++)
+        if(this.DrawCoords)
         {
-            let x = itemW * 0.65;
-            let y = i * itemH + itemH * 0.75;
-
-            let text = `${i+1}`;
-            try
+            for(let i = 0; i < Canvas.Height; i++)
             {
-                this._context.fillText(text, x, y);
+                let x = itemW * 0.5 + 2;
+                let y = i * itemH + itemH * 0.5 + 5;
+    
+                let text = `${i+1}`;
+                try
+                {
+                    this._context.fillText(text, x, y);
+                }
+                catch(ex) {}
             }
-            catch(ex) {}
-        }
-
-        for(let i = 0; i < Canvas.Width; i++)
-        {
-            let x = itemW * 1.65 + i * itemW;
-            let y = Canvas.Height * itemH + itemH * 0.75;
-
-            let text = this._canvas.GetVerticalCoord(i);
-            try
+    
+            for(let i = 0; i < Canvas.Width; i++)
             {
-                this._context.fillText(text, x, y);
+                let x = itemW * 1.5 + i * itemW + 3;
+                let y = Canvas.Height * itemH + itemH * 0.5 + 5;
+    
+                let text = this._canvas.GetVerticalCoord(i);
+                try
+                {
+                    this._context.fillText(text, x, y);
+                }
+                catch(ex) {}
             }
-            catch(ex) {}
         }
 
         this._context.lineWidth = 2;
 
         this._context.strokeStyle = "#FFFFFF";
-        this._context.strokeRect(this._padding + itemW, this._padding, w - itemW, h - itemH);
+        this._context.strokeRect(this._padding + (this.DrawCoords?itemW:0), this._padding, w - (this.DrawCoords?itemW:0), h - (this.DrawCoords?itemW:0));
 
-        if(this._mouseX >= 0 && this._mouseX < Canvas.Width && this._mouseY >= 0 && this._mouseY < Canvas.Height)
+        if(this.DrawCoords &&
+            this._mouseX >= 0 && this._mouseX < Canvas.Width &&
+            this._mouseY >= 0 && this._mouseY < Canvas.Height)
         {
             this._context.strokeStyle = "#FFFF33";
             this._context.strokeRect(this._padding + itemW + this._mouseX * itemW, this._padding + this._mouseY * itemH, itemW, itemH);
@@ -110,6 +125,8 @@ class CanvasPanel
 
     private OnMouseMove(evt)
     {
+        if(!this.DrawCoords) return;
+
         this.CalculateMouseCoord(evt);
         if(this._mouseX >= 0 && this._mouseX < Canvas.Width &&
             this._mouseY >= 0 && this._mouseY < Canvas.Height &&
@@ -128,6 +145,8 @@ class CanvasPanel
 
     private OnMouseDown(evt)
     {
+        if(!this.DrawCoords) return;
+
         this.CalculateMouseCoord(evt);
         this._isMouseDown = true;
         if(this._mouseX >= 0 && this._mouseX < Canvas.Width &&
