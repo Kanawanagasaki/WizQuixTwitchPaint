@@ -6,6 +6,7 @@ class WebClient
     public IsAuthorized:boolean;
     public IsConnected:boolean;
     private _auth:Twitch.ext.Authorized;
+    private _jwt:any;
 
     private _commands:Commands;
 
@@ -14,8 +15,11 @@ class WebClient
     public Background:string;
     public Title:string;
 
-    private _eventBackgroundChanged:any[] = [];
-    private _eventTitleChanged:any[] = [];
+    public OnBackgroundChanged:()=>any = undefined;
+    public OnTitleChanged:()=>any = undefined;
+    public OnConnected:()=>any = undefined;
+    public OnMissingRoom:()=>any = undefined;
+    public OnDisconnected:()=>any = undefined;
 
     public constructor(uri:string, canvas:Canvas)
     {
@@ -32,13 +36,15 @@ class WebClient
     public SetBackground(bg:string)
     {
         this.Background = bg;
-        this.BackgraundChanged();
+        if(this.OnBackgroundChanged !== undefined)
+            this.OnBackgroundChanged();
     }
 
     public SetTitle(title:string)
     {
         this.Title = title;
-        this.TitleChanged();
+        if(this.OnTitleChanged !== undefined)
+            this.OnTitleChanged();
     }
 
     private OnAuth(auth:Twitch.ext.Authorized)
@@ -50,7 +56,7 @@ class WebClient
 
     private ProcessHistory()
     {
-        if(this.Canvas.History.length > 0)
+        if(this.IsConnected && this.Canvas.History.length > 0)
         {
             let item = this.Canvas.History.shift();
             this.SendMessage(`setpixel ${this.Canvas.GetVerticalCoord(item.X)}${item.Y+1} ${item.Color.Name}`);
@@ -61,16 +67,25 @@ class WebClient
     {
         if(this.IsConnected)
         {
-            this._socket.send(`${message}\0`);
+            this._socket.send(`${message}\n`);
         }
     }
 
-    public Init()
+    public Connected()
     {
+        if(this.OnConnected !== undefined)
+            this.OnConnected();
+        
         this.SendMessage("getbackground");
         this.SendMessage("gettitle");
         this.SendMessage("getcolors");
         this.SendMessage("getcanvas");
+    }
+
+    public MissingRoom()
+    {
+        if(this.OnMissingRoom !== undefined)
+            this.OnMissingRoom();
     }
 
     public Open()
@@ -95,8 +110,16 @@ class WebClient
     private OnOpen(event:Event)
     {
         this.IsConnected = true;
-        let jwt = this.ParseJwt(this._auth.token);
-        this.SendMessage(`setme viewer ${this._auth.channelId} ${jwt.user_id}`);
+        this._jwt = this.ParseJwt(this._auth.token);
+        this.TryJoinRoom();
+    }
+
+    public TryJoinRoom()
+    {
+        if(this.IsConnected)
+        {
+            this.SendMessage(`joinroom ${this._auth.channelId} ${this._jwt.user_id}`);
+        }
     }
 
     private OnMessage(message:MessageEvent<any>)
@@ -114,11 +137,14 @@ class WebClient
     private OnClose(event:CloseEvent)
     {
         this.IsConnected = false;
+        if(this.OnDisconnected !== undefined)
+            this.OnDisconnected();
     }
 
     private OnError(error:Event)
     {
-        
+        if(this.IsConnected) this._socket.close();
+        this.IsConnected = false;
     }
 
     private ParseJwt (token)
@@ -131,30 +157,4 @@ class WebClient
     
         return JSON.parse(jsonPayload);
     };
-
-    private BackgraundChanged()
-    {
-        for(let i = 0; i < this._eventBackgroundChanged.length; i++)
-        {
-            this._eventBackgroundChanged[i]();
-        }
-    }
-
-    public OnBackgroundChanged(func:()=>any)
-    {
-        this._eventBackgroundChanged.push(func);
-    }
-
-    private TitleChanged()
-    {
-        for(let i = 0; i < this._eventTitleChanged.length; i++)
-        {
-            this._eventTitleChanged[i]();
-        }
-    }
-
-    public OnTitleChanged(func:()=>any)
-    {
-        this._eventTitleChanged.push(func);
-    }
 }

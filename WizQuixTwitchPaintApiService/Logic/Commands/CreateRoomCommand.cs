@@ -22,6 +22,7 @@ namespace WizQuixTwitchPaintApiService.Logic.Commands
                 await Client.SetChannel(id);
             else
                 await Client.SetChannel(broadcaster);
+
             Client.Identify(true);
 
             var status = await Hub.CreateRoom(Client);

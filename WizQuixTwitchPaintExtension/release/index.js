@@ -14,11 +14,18 @@ var __extends = (this && this.__extends) || (function () {
 var App = (function () {
     function App(placeholder, uri) {
         var _this = this;
+        this._animationInterval = undefined;
+        this._loadedData = 0;
+        this._isDead = false;
         this._palette = new Palette();
         this._canvas = new Canvas(this._palette);
         this._client = new WebClient(uri, this._canvas);
-        this._client.OnBackgroundChanged(function () { return _this.OnBackgroundChanged(); });
-        this._client.OnTitleChanged(function () { return _this.OnTitleChanged(); });
+        this._palette.OnChange(function () { return _this.OnPaletteChanged(); });
+        this._client.OnConnected = function () { return _this.OnConnect(); };
+        this._client.OnMissingRoom = function () { return _this.OnMissingRoom(); };
+        this._client.OnDisconnected = function () { return _this.OnDisconnect(); };
+        this._client.OnBackgroundChanged = function () { return _this.OnBackgroundChanged(); };
+        this._client.OnTitleChanged = function () { return _this.OnTitleChanged(); };
         this._placeholder = placeholder;
         placeholder.style.backgroundColor = "black";
         placeholder.style.position = "absolute";
@@ -30,6 +37,28 @@ var App = (function () {
         placeholder.style.backgroundRepeat = "repeat";
         placeholder.style.backgroundSize = "contain";
         placeholder.style.backgroundPosition = "center";
+        placeholder.onmouseenter = function () {
+            if (!_this._isDead)
+                _this.AnimateOpasity(1, 150);
+        };
+        placeholder.onmouseleave = function () {
+            if (!_this._isDead)
+                _this.AnimateOpasity(0.2, 150);
+        };
+        this._statusPlaceholder = document.createElement("div");
+        this._statusPlaceholder.style.position = "absolute";
+        this._statusPlaceholder.style.left = "0px";
+        this._statusPlaceholder.style.top = "0px";
+        this._statusPlaceholder.style.right = "0px";
+        this._statusPlaceholder.style.bottom = "0px";
+        this._statusPlaceholder.style.padding = "20px";
+        this._statusPlaceholder.style.color = "white";
+        this._statusPlaceholder.style.fontSize = "48px";
+        this._statusPlaceholder.style.display = "flex";
+        this._statusPlaceholder.style.justifyContent = "center";
+        this._statusPlaceholder.style.alignItems = "center";
+        this._statusPlaceholder.style.textAlign = "center";
+        this._statusPlaceholder.innerText = "Connecting to Hub...";
         this._palettePlaceholder = document.createElement("div");
         this._palettePlaceholder.style.position = "absolute";
         this._palettePlaceholder.style.right = "0px";
@@ -51,17 +80,96 @@ var App = (function () {
         this._titlePlaceholder.style.backgroundRepeat = "no-repeat";
         this._titlePlaceholder.style.backgroundSize = "contain";
         this._titlePlaceholder.style.backgroundPosition = "left";
-        placeholder.append(this._palettePlaceholder);
-        placeholder.append(this._canvasPlaceholder);
-        placeholder.append(this._titlePlaceholder);
+        this._placeholder.append(this._statusPlaceholder);
         this._palettePanel = new PalettePanel(this._palettePlaceholder, this._palette);
         this._canvasPanel = new CanvasPanel(this._canvasPlaceholder, this._canvas);
     }
     App.prototype.OnBackgroundChanged = function () {
-        this._placeholder.style.backgroundImage = "url('" + this._client.Background + "')";
+        var img = new Image();
+        img.src = this._client.Background;
+        this._placeholder.style.backgroundImage = "url('" + img.src + "')";
+        this.OnDataReceived(1);
     };
     App.prototype.OnTitleChanged = function () {
-        this._titlePlaceholder.style.backgroundImage = "url('" + this._client.Title + "')";
+        var img = new Image();
+        img.src = this._client.Title;
+        this._titlePlaceholder.style.backgroundImage = "url('" + img.src + "')";
+        this.OnDataReceived(2);
+    };
+    App.prototype.OnPaletteChanged = function () {
+        this.OnDataReceived(4);
+    };
+    App.prototype.OnDataReceived = function (mask) {
+        this._loadedData |= mask;
+        if ((this._loadedData & 7) == 7) {
+            this._placeholder.innerHTML = "";
+            this._placeholder.append(this._titlePlaceholder);
+            this._placeholder.append(this._palettePlaceholder);
+            this._placeholder.append(this._canvasPlaceholder);
+        }
+        else {
+            var progress = 0;
+            if ((this._loadedData & 1) > 0)
+                progress++;
+            if ((this._loadedData & 2) > 0)
+                progress++;
+            if ((this._loadedData & 4) > 0)
+                progress++;
+            this._statusPlaceholder.innerText = "Loading... " + progress + "/3";
+        }
+    };
+    App.prototype.OnConnect = function () {
+        this._statusPlaceholder.innerText = "Loading... 0/3";
+    };
+    App.prototype.OnMissingRoom = function () {
+        var _this = this;
+        this._statusPlaceholder.innerText = "Room didn't found";
+        setTimeout(function () {
+            _this._client.TryJoinRoom();
+        }, 2000);
+    };
+    App.prototype.OnDisconnect = function () {
+        var _this = this;
+        this._placeholder.innerHTML = "";
+        this._placeholder.append(this._statusPlaceholder);
+        this._statusPlaceholder.innerText = "Unable to establish connection to hub";
+        this._isDead = true;
+        setTimeout(function () {
+            _this.AnimateOpasity(0, 200);
+        }, 2000);
+        setTimeout(function () {
+            _this._placeholder.innerHTML = "";
+        }, 2200);
+    };
+    App.prototype.AnimateOpasity = function (opacity, time) {
+        var _this = this;
+        if (this._animationInterval !== undefined)
+            clearInterval(this._animationInterval);
+        opacity = Math.max(0, opacity);
+        opacity = Math.min(1, opacity);
+        var start = parseFloat(this._placeholder.style.opacity);
+        if (isNaN(start)) {
+            this._placeholder.style.opacity = '1';
+            start = 1;
+        }
+        var step = Math.abs((start - opacity) / (time / 20));
+        this._animationInterval = setInterval(function () {
+            var current = parseFloat(_this._placeholder.style.opacity);
+            if (start > opacity) {
+                if (current > opacity)
+                    current -= step;
+                else
+                    clearInterval(_this._animationInterval);
+                _this._placeholder.style.opacity = "" + Math.max(current, opacity);
+            }
+            else {
+                if (current < opacity)
+                    current += step;
+                else
+                    clearInterval(_this._animationInterval);
+                _this._placeholder.style.opacity = "" + Math.min(current, opacity);
+            }
+        }, 20);
     };
     return App;
 }());
@@ -270,8 +378,11 @@ var HistoryItem = (function () {
 var WebClient = (function () {
     function WebClient(uri, canvas) {
         var _this = this;
-        this._eventBackgroundChanged = [];
-        this._eventTitleChanged = [];
+        this.OnBackgroundChanged = undefined;
+        this.OnTitleChanged = undefined;
+        this.OnConnected = undefined;
+        this.OnMissingRoom = undefined;
+        this.OnDisconnected = undefined;
         this._uri = uri;
         this._commands = new Commands(this);
         this.Canvas = canvas;
@@ -282,11 +393,13 @@ var WebClient = (function () {
     }
     WebClient.prototype.SetBackground = function (bg) {
         this.Background = bg;
-        this.BackgraundChanged();
+        if (this.OnBackgroundChanged !== undefined)
+            this.OnBackgroundChanged();
     };
     WebClient.prototype.SetTitle = function (title) {
         this.Title = title;
-        this.TitleChanged();
+        if (this.OnTitleChanged !== undefined)
+            this.OnTitleChanged();
     };
     WebClient.prototype.OnAuth = function (auth) {
         this.IsAuthorized = true;
@@ -294,21 +407,27 @@ var WebClient = (function () {
         this.Open();
     };
     WebClient.prototype.ProcessHistory = function () {
-        if (this.Canvas.History.length > 0) {
+        if (this.IsConnected && this.Canvas.History.length > 0) {
             var item = this.Canvas.History.shift();
             this.SendMessage("setpixel " + this.Canvas.GetVerticalCoord(item.X) + (item.Y + 1) + " " + item.Color.Name);
         }
     };
     WebClient.prototype.SendMessage = function (message) {
         if (this.IsConnected) {
-            this._socket.send(message + "\0");
+            this._socket.send(message + "\n");
         }
     };
-    WebClient.prototype.Init = function () {
+    WebClient.prototype.Connected = function () {
+        if (this.OnConnected !== undefined)
+            this.OnConnected();
         this.SendMessage("getbackground");
         this.SendMessage("gettitle");
         this.SendMessage("getcolors");
         this.SendMessage("getcanvas");
+    };
+    WebClient.prototype.MissingRoom = function () {
+        if (this.OnMissingRoom !== undefined)
+            this.OnMissingRoom();
     };
     WebClient.prototype.Open = function () {
         var _this = this;
@@ -326,8 +445,13 @@ var WebClient = (function () {
     };
     WebClient.prototype.OnOpen = function (event) {
         this.IsConnected = true;
-        var jwt = this.ParseJwt(this._auth.token);
-        this.SendMessage("setme viewer " + this._auth.channelId + " " + jwt.user_id);
+        this._jwt = this.ParseJwt(this._auth.token);
+        this.TryJoinRoom();
+    };
+    WebClient.prototype.TryJoinRoom = function () {
+        if (this.IsConnected) {
+            this.SendMessage("joinroom " + this._auth.channelId + " " + this._jwt.user_id);
+        }
     };
     WebClient.prototype.OnMessage = function (message) {
         if (typeof (message.data) === "string") {
@@ -339,8 +463,13 @@ var WebClient = (function () {
     };
     WebClient.prototype.OnClose = function (event) {
         this.IsConnected = false;
+        if (this.OnDisconnected !== undefined)
+            this.OnDisconnected();
     };
     WebClient.prototype.OnError = function (error) {
+        if (this.IsConnected)
+            this._socket.close();
+        this.IsConnected = false;
     };
     WebClient.prototype.ParseJwt = function (token) {
         var base64Url = token.split('.')[1];
@@ -351,22 +480,6 @@ var WebClient = (function () {
         return JSON.parse(jsonPayload);
     };
     ;
-    WebClient.prototype.BackgraundChanged = function () {
-        for (var i = 0; i < this._eventBackgroundChanged.length; i++) {
-            this._eventBackgroundChanged[i]();
-        }
-    };
-    WebClient.prototype.OnBackgroundChanged = function (func) {
-        this._eventBackgroundChanged.push(func);
-    };
-    WebClient.prototype.TitleChanged = function () {
-        for (var i = 0; i < this._eventTitleChanged.length; i++) {
-            this._eventTitleChanged[i]();
-        }
-    };
-    WebClient.prototype.OnTitleChanged = function (func) {
-        this._eventTitleChanged.push(func);
-    };
     return WebClient;
 }());
 var ACommand = (function () {
@@ -384,9 +497,9 @@ var Commands = (function () {
         this._commands.push(new GetCanvasCommand(client));
         this._commands.push(new GetColorsCommand(client));
         this._commands.push(new GetTitleCommand(client));
+        this._commands.push(new JoinRoomCommand(client));
         this._commands.push(new SetBackgroundCommand(client));
         this._commands.push(new SetColorCommand(client));
-        this._commands.push(new SetMeCommand(client));
         this._commands.push(new SetPixelCommand(client));
         this._commands.push(new SetTitleCommand(client));
     }
@@ -505,18 +618,20 @@ var SetColorCommand = (function (_super) {
     };
     return SetColorCommand;
 }(ACommand));
-var SetMeCommand = (function (_super) {
-    __extends(SetMeCommand, _super);
-    function SetMeCommand(client) {
-        return _super.call(this, "setme", client) || this;
+var JoinRoomCommand = (function (_super) {
+    __extends(JoinRoomCommand, _super);
+    function JoinRoomCommand(client) {
+        return _super.call(this, "joinroom", client) || this;
     }
-    SetMeCommand.prototype.OnInfo = function (data) {
-        this.Client.Init();
+    JoinRoomCommand.prototype.OnInfo = function (data) {
+        this.Client.Connected();
     };
-    SetMeCommand.prototype.OnError = function (code, error) {
-        this.Client.Close();
+    JoinRoomCommand.prototype.OnError = function (code, error) {
+        if (code === 404) {
+            this.Client.OnMissingRoom();
+        }
     };
-    return SetMeCommand;
+    return JoinRoomCommand;
 }(ACommand));
 var SetPixelCommand = (function (_super) {
     __extends(SetPixelCommand, _super);

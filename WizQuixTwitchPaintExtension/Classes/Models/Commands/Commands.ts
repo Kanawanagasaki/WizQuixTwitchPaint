@@ -10,9 +10,9 @@ class Commands
         this._commands.push(new GetCanvasCommand(client));
         this._commands.push(new GetColorsCommand(client));
         this._commands.push(new GetTitleCommand(client));
+        this._commands.push(new JoinRoomCommand(client));
         this._commands.push(new SetBackgroundCommand(client));
         this._commands.push(new SetColorCommand(client));
-        this._commands.push(new SetMeCommand(client));
         this._commands.push(new SetPixelCommand(client));
         this._commands.push(new SetTitleCommand(client));
     }
