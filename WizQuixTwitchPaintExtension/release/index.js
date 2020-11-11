@@ -117,7 +117,7 @@ var App = (function () {
                             _this._statusPlaceholder.style.display = "flex";
                             _this._iconStatusPlaceholder.style.display = "none";
                         }
-                        _this._canvasPanel.DrawCoords = size > 300;
+                        _this._canvasPanel.Maximized = size > 300;
                     }, 100);
                 }
             }
@@ -138,7 +138,7 @@ var App = (function () {
                             _this._statusPlaceholder.style.display = "none";
                             _this._iconStatusPlaceholder.style.display = "flex";
                         }
-                        _this._canvasPanel.DrawCoords = size > 300;
+                        _this._canvasPanel.Maximized = size > 300;
                     }, 100);
                 }
             }
@@ -250,6 +250,46 @@ var App = (function () {
     };
     return App;
 }());
+var Config = (function () {
+    function Config(placeholder, version) {
+        this._options = [
+            {
+                name: "string_test",
+                text: "String Test",
+                type: "string"
+            },
+            {
+                name: "int_test",
+                text: "Integer Test",
+                type: "int",
+                min: 10,
+                max: 20,
+                step: 5
+            },
+            {
+                name: "float_test",
+                text: "Float Test",
+                type: "float",
+                min: 5.5,
+                max: 7.5,
+                step: 0.25
+            },
+            {
+                name: "select_test",
+                text: "Select Test",
+                type: "select",
+                options: [
+                    "option1", "option2", "option3"
+                ]
+            }
+        ];
+        this._placeholder = placeholder;
+        this._version = version;
+        Twitch.ext.onContext(function (ctx, changed) {
+        });
+    }
+    return Config;
+}());
 var Color = (function () {
     function Color(name, rgb) {
         this.Name = name;
@@ -342,6 +382,7 @@ var Palette = (function () {
 var Canvas = (function () {
     function Canvas(palette) {
         this.History = [];
+        this.FloatingPixels = [];
         this.Palette = palette;
         this._canvas = [];
         for (var iy = 0; iy < Canvas.Height; iy++) {
@@ -363,10 +404,21 @@ var Canvas = (function () {
             return;
         if (this._canvas[y][x] !== color) {
             this._canvas[y][x] = color;
-            if (!ignoreHistory) {
+            if (!ignoreHistory)
                 this.History.push(new HistoryItem(x, y, color));
-            }
         }
+    };
+    Canvas.prototype.CreateFloatingPixel = function (x, y, color, username) {
+        if (x < 0 || x >= Canvas.Width)
+            return;
+        if (y < 0 || y >= Canvas.Height)
+            return;
+        var fp = new FloatingPixel();
+        fp.X = x;
+        fp.Y = y;
+        fp.Color = color;
+        fp.Username = username;
+        this.FloatingPixels.push(fp);
     };
     Canvas.prototype.GetPixel = function (x, y) {
         if (x < 0 || x >= Canvas.Width)
@@ -537,10 +589,11 @@ var WebClient = (function () {
     WebClient.prototype.OnOpen = function (event) {
         this.IsConnected = true;
         this._jwt = this.ParseJwt(this._auth.token);
+        console.log({ auth: this._auth, jwt: this._jwt });
         this.TryJoinRoom();
     };
     WebClient.prototype.TryJoinRoom = function () {
-        if (this.IsConnected) {
+        if (this.IsConnected && this._jwt.user_id !== undefined) {
             this.SendMessage("joinroom " + this._auth.channelId + " " + this._jwt.user_id);
         }
     };
@@ -783,7 +836,7 @@ var SetPixelCommand = (function (_super) {
             return;
         if (data.length < 3)
             return;
-        var nickname = data[0];
+        var username = data[0];
         var coordStr = data[1];
         var colorname = data.slice(2).join(" ");
         var coords = this.Client.Canvas.ParseCoordinate(coordStr);
@@ -793,6 +846,7 @@ var SetPixelCommand = (function (_super) {
         if (color === undefined)
             return;
         this.Client.Canvas.SetPixel(coords.x, coords.y, color, true);
+        this.Client.Canvas.CreateFloatingPixel(coords.x, coords.y, color, username);
     };
     SetPixelCommand.prototype.OnError = function (code, error) {
     };
@@ -818,7 +872,7 @@ var CanvasPanel = (function () {
         this._mouseX = -1;
         this._mouseY = -1;
         this._isMouseDown = false;
-        this.DrawCoords = false;
+        this.Maximized = false;
         this._app = app;
         this._placehloder = placeholder;
         this._canvas = canvas;
@@ -842,15 +896,15 @@ var CanvasPanel = (function () {
         this._context.clearRect(0, 0, this._width, this._height);
         var w = this._width - this._padding * 2;
         var h = this._height - this._padding * 2;
-        var itemW = w / (Canvas.Width + (this.DrawCoords ? 1 : 0));
-        var itemH = h / (Canvas.Height + (this.DrawCoords ? 1 : 0));
+        var itemW = w / (Canvas.Width + (this.Maximized ? 1 : 0));
+        var itemH = h / (Canvas.Height + (this.Maximized ? 1 : 0));
         for (var iy = 0; iy < Canvas.Height; iy++) {
             for (var ix = 0; ix < Canvas.Width; ix++) {
-                if (this.DrawCoords && this._mouseX == ix && this._mouseY == iy)
+                if (this.Maximized && this._mouseX == ix && this._mouseY == iy)
                     this._context.fillStyle = this._canvas.Palette.GetSelectedColor().Hex;
                 else
                     this._context.fillStyle = this._canvas.GetPixel(ix, iy).Hex;
-                var x = this._padding + (this.DrawCoords ? itemW : 0) + ix * itemW;
+                var x = this._padding + (this.Maximized ? itemW : 0) + ix * itemW;
                 var y = this._padding + iy * itemH;
                 this._context.fillRect(x - 1, y - 1, itemW + 1, itemH + 1);
             }
@@ -863,20 +917,20 @@ var CanvasPanel = (function () {
             this._context.fillStyle = "#FFFFFF";
         }
         catch (ex) { }
-        if (this.DrawCoords) {
-            for (var i = 0; i < Canvas.Height; i++) {
+        if (this.Maximized) {
+            for (var i_1 = 0; i_1 < Canvas.Height; i_1++) {
                 var x = itemW * 0.5 + 2;
-                var y = i * itemH + itemH * 0.5 + 5;
-                var text = "" + (i + 1);
+                var y = i_1 * itemH + itemH * 0.5 + 5;
+                var text = "" + (i_1 + 1);
                 try {
                     this._context.fillText(text, x, y);
                 }
                 catch (ex) { }
             }
-            for (var i = 0; i < Canvas.Width; i++) {
-                var x = itemW * 1.5 + i * itemW + 3;
+            for (var i_2 = 0; i_2 < Canvas.Width; i_2++) {
+                var x = itemW * 1.5 + i_2 * itemW + 3;
                 var y = Canvas.Height * itemH + itemH * 0.5 + 5;
-                var text = this._canvas.GetVerticalCoord(i);
+                var text = this._canvas.GetVerticalCoord(i_2);
                 try {
                     this._context.fillText(text, x, y);
                 }
@@ -885,16 +939,27 @@ var CanvasPanel = (function () {
         }
         this._context.lineWidth = 2;
         this._context.strokeStyle = "#FFFFFF";
-        this._context.strokeRect(this._padding + (this.DrawCoords ? itemW : 0), this._padding, w - (this.DrawCoords ? itemW : 0), h - (this.DrawCoords ? itemW : 0));
-        if (this.DrawCoords &&
+        this._context.strokeRect(this._padding + (this.Maximized ? itemW : 0), this._padding, w - (this.Maximized ? itemW : 0), h - (this.Maximized ? itemW : 0));
+        if (this.Maximized &&
             this._mouseX >= 0 && this._mouseX < Canvas.Width &&
             this._mouseY >= 0 && this._mouseY < Canvas.Height) {
             this._context.strokeStyle = "#FFFF33";
             this._context.strokeRect(this._padding + itemW + this._mouseX * itemW, this._padding + this._mouseY * itemH, itemW, itemH);
         }
+        for (var i = 0; i < this._canvas.FloatingPixels.length; i++) {
+            if (this._canvas.FloatingPixels[i].IsEnded()) {
+                this._canvas.FloatingPixels.splice(i, 1);
+                i--;
+            }
+            else if (this.Maximized) {
+                var fpx = this._padding + itemW + this._canvas.FloatingPixels[i].X * itemW;
+                var fpy = this._padding + this._canvas.FloatingPixels[i].Y * itemH;
+                this._canvas.FloatingPixels[i].Draw(this._context, fpx, fpy, itemW, itemH);
+            }
+        }
     };
     CanvasPanel.prototype.OnMouseMove = function (evt) {
-        if (!this.DrawCoords)
+        if (!this.Maximized)
             return;
         this.CalculateMouseCoord(evt);
         if (this._mouseX >= 0 && this._mouseX < Canvas.Width &&
@@ -909,7 +974,7 @@ var CanvasPanel = (function () {
         this._isMouseDown = false;
     };
     CanvasPanel.prototype.OnMouseDown = function (evt) {
-        if (!this.DrawCoords)
+        if (!this.Maximized)
             return;
         this.CalculateMouseCoord(evt);
         this._isMouseDown = true;
@@ -997,8 +1062,8 @@ var PalettePanel = (function () {
             };
             colorDiv.onclick = function () {
                 _this._palette.SelectColor(i);
-                for (var i_1 = 0; i_1 < _this._paddingPlaceholder.children.length; i_1++) {
-                    var item = _this._paddingPlaceholder.children[i_1];
+                for (var i_3 = 0; i_3 < _this._paddingPlaceholder.children.length; i_3++) {
+                    var item = _this._paddingPlaceholder.children[i_3];
                     item.style.color = "";
                     item.style.fontWeight = "";
                 }
@@ -1016,6 +1081,79 @@ var PalettePanel = (function () {
 }());
 var productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 var testUri = "wss://localhost:5001";
+var version = "0.0.1";
 var appDiv = document.getElementById("app");
-var app = new App(appDiv, testUri);
+if (appDiv !== null)
+    new App(appDiv, productUri);
+var configDiv = document.getElementById("config");
+if (configDiv !== null)
+    new Config(configDiv, version);
+var AConfigOption = (function () {
+    function AConfigOption(name, text, type) {
+        this.Name = name;
+        this.Text = text;
+        this.Type = type;
+    }
+    return AConfigOption;
+}());
+var ConfigOptionTypes;
+(function (ConfigOptionTypes) {
+    ConfigOptionTypes[ConfigOptionTypes["String"] = 0] = "String";
+    ConfigOptionTypes[ConfigOptionTypes["Int"] = 1] = "Int";
+    ConfigOptionTypes[ConfigOptionTypes["Float"] = 2] = "Float";
+    ConfigOptionTypes[ConfigOptionTypes["Select"] = 3] = "Select";
+})(ConfigOptionTypes || (ConfigOptionTypes = {}));
+var FloatingPixel = (function () {
+    function FloatingPixel() {
+        this._startTime = Date.now();
+        var angle = Math.random() * 2 * Math.PI;
+        var dist = FloatingPixel.TravelDistanceStart + Math.random() * FloatingPixel.TravelDistance;
+        this._xDist = Math.cos(angle) * dist;
+        this._yDist = Math.sin(angle) * dist;
+    }
+    FloatingPixel.prototype.Draw = function (g, x, y, w, h) {
+        x += this.Progress() * this._xDist * w + w / 2;
+        y += this.Progress() * this._yDist * h + h / 2;
+        w *= FloatingPixel.SizeMultiplier;
+        h *= FloatingPixel.SizeMultiplier;
+        var rotation = this.Rotation();
+        g.save();
+        g.globalAlpha = this.Opacity();
+        g.translate(x, y);
+        g.rotate(rotation * Math.PI);
+        g.fillStyle = this.Color.Hex;
+        g.fillRect(-w / 2, -h / 2, w, h);
+        g.strokeStyle = "#000000";
+        g.strokeRect(-w / 2, -h / 2, w, h);
+        g.strokeStyle = "#FFFFFF";
+        g.strokeRect(-(w - 2) / 2, -(h - 2) / 2, w - 2, h - 2);
+        g.restore();
+    };
+    FloatingPixel.prototype.Rotation = function () {
+        var time = Date.now() % FloatingPixel.RotationTime;
+        var progress = time / FloatingPixel.RotationTime;
+        var sin = Math.sin(2 * Math.PI * progress);
+        return FloatingPixel.RotationAngle * sin;
+    };
+    FloatingPixel.prototype.Opacity = function () {
+        return Math.min(1, 2.5 * (1 - this.Progress()));
+    };
+    FloatingPixel.prototype.IsEnded = function () {
+        return this.Progress() === 0;
+    };
+    FloatingPixel.prototype.Progress = function () {
+        var now = Date.now();
+        if (now - this._startTime > FloatingPixel.AnimationTime)
+            return 0;
+        else
+            return (now - this._startTime) / FloatingPixel.AnimationTime;
+    };
+    FloatingPixel.AnimationTime = 1333;
+    FloatingPixel.TravelDistanceStart = 0.5;
+    FloatingPixel.TravelDistance = 1.5;
+    FloatingPixel.RotationAngle = 0.025 * Math.PI;
+    FloatingPixel.RotationTime = 2000;
+    FloatingPixel.SizeMultiplier = 1.1;
+    return FloatingPixel;
+}());
 //# sourceMappingURL=index.js.map

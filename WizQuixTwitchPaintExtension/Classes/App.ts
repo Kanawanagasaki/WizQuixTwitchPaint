@@ -142,7 +142,7 @@ class App
                             this._iconStatusPlaceholder.style.display = "none";
                         }
 
-                        this._canvasPanel.DrawCoords = size > 300;
+                        this._canvasPanel.Maximized = size > 300;
                     }, 100);
                 }
             }
@@ -171,7 +171,7 @@ class App
                             this._iconStatusPlaceholder.style.display = "flex";
                         }
 
-                        this._canvasPanel.DrawCoords = size > 300;
+                        this._canvasPanel.Maximized = size > 300;
                     }, 100);
                 }
             }

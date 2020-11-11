@@ -131,12 +131,13 @@ class WebClient
     {
         this.IsConnected = true;
         this._jwt = this.ParseJwt(this._auth.token);
+        console.log({auth:this._auth, jwt:this._jwt});
         this.TryJoinRoom();
     }
 
     public TryJoinRoom()
     {
-        if(this.IsConnected)
+        if(this.IsConnected && this._jwt.user_id !== undefined)
         {
             this.SendMessage(`joinroom ${this._auth.channelId} ${this._jwt.user_id}`);
         }

@@ -5,6 +5,7 @@ class Canvas
     public static Letters:string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public History:HistoryItem[] = [];
+    public FloatingPixels:FloatingPixel[] = [];
 
     private _canvas:Color[][];
 
@@ -40,10 +41,22 @@ class Canvas
         {
             this._canvas[y][x] = color;
             if(!ignoreHistory)
-            {
                 this.History.push(new HistoryItem(x, y, color));
-            }
         }
+    }
+
+    public CreateFloatingPixel(x:number, y:number, color:Color, username:string)
+    {
+        if(x < 0 || x >= Canvas.Width) return;
+        if(y < 0 || y >= Canvas.Height) return;
+
+        let fp = new FloatingPixel();
+        fp.X = x;
+        fp.Y = y;
+        fp.Color = color;
+        fp.Username = username;
+
+        this.FloatingPixels.push(fp);
     }
 
     public GetPixel(x: number, y: number)

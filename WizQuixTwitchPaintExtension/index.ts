@@ -1,5 +1,6 @@
 /// <reference path="./node_modules/@types/twitch-ext/index.d.ts" />
 /// <reference path="./Classes/App.ts" />
+/// <reference path="./Classes/Config.ts" />
 /// <reference path="./Classes/Models/Color.ts" />
 /// <reference path="./Classes/Models/Palette.ts" />
 /// <reference path="./Classes/Models/Canvas.ts" />
@@ -26,5 +27,10 @@
 let productUri = "wss://wizquixtwitchpaint.azurewebsites.net/";
 let testUri = "wss://localhost:5001";
 
+let version = "0.0.1";
+
 let appDiv = document.getElementById("app");
-let app:App = new App(appDiv, productUri);
+if(appDiv !== null) new App(appDiv, productUri);
+
+let configDiv = document.getElementById("config");
+if(configDiv !== null) new Config(configDiv, version);

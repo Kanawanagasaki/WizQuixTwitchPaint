@@ -14,7 +14,7 @@ class CanvasPanel
     private _mouseY:number = -1;
     private _isMouseDown:boolean = false;
 
-    public DrawCoords:boolean = false;
+    public Maximized:boolean = false;
 
     public constructor(app:App, placeholder:HTMLElement, canvas:Canvas)
     {
@@ -52,19 +52,19 @@ class CanvasPanel
         let w = this._width - this._padding * 2;
         let h = this._height - this._padding * 2;
 
-        let itemW = w / (Canvas.Width + (this.DrawCoords?1:0));
-        let itemH = h / (Canvas.Height + (this.DrawCoords?1:0));
+        let itemW = w / (Canvas.Width + (this.Maximized?1:0));
+        let itemH = h / (Canvas.Height + (this.Maximized?1:0));
 
         for(let iy = 0; iy < Canvas.Height; iy++)
         {
             for(let ix = 0; ix < Canvas.Width; ix++)
             {
-                if(this.DrawCoords && this._mouseX == ix && this._mouseY == iy)
+                if(this.Maximized && this._mouseX == ix && this._mouseY == iy)
                     this._context.fillStyle = this._canvas.Palette.GetSelectedColor().Hex;
                 else
                     this._context.fillStyle = this._canvas.GetPixel(ix, iy).Hex;
 
-                let x = this._padding + (this.DrawCoords ? itemW : 0) + ix * itemW;
+                let x = this._padding + (this.Maximized ? itemW : 0) + ix * itemW;
                 let y = this._padding + iy * itemH;
                 this._context.fillRect(x-1, y-1, itemW+1, itemH+1);
             }
@@ -80,7 +80,7 @@ class CanvasPanel
         }
         catch(ex) {}
 
-        if(this.DrawCoords)
+        if(this.Maximized)
         {
             for(let i = 0; i < Canvas.Height; i++)
             {
@@ -112,20 +112,35 @@ class CanvasPanel
         this._context.lineWidth = 2;
 
         this._context.strokeStyle = "#FFFFFF";
-        this._context.strokeRect(this._padding + (this.DrawCoords?itemW:0), this._padding, w - (this.DrawCoords?itemW:0), h - (this.DrawCoords?itemW:0));
+        this._context.strokeRect(this._padding + (this.Maximized?itemW:0), this._padding, w - (this.Maximized?itemW:0), h - (this.Maximized?itemW:0));
 
-        if(this.DrawCoords &&
+        if(this.Maximized &&
             this._mouseX >= 0 && this._mouseX < Canvas.Width &&
             this._mouseY >= 0 && this._mouseY < Canvas.Height)
         {
             this._context.strokeStyle = "#FFFF33";
             this._context.strokeRect(this._padding + itemW + this._mouseX * itemW, this._padding + this._mouseY * itemH, itemW, itemH);
         }
+
+        for( var i = 0; i < this._canvas.FloatingPixels.length; i++)
+        {
+            if (this._canvas.FloatingPixels[i].IsEnded())
+            {
+                this._canvas.FloatingPixels.splice(i, 1);
+                i--;
+            }
+            else if(this.Maximized)
+            {
+                let fpx = this._padding + itemW + this._canvas.FloatingPixels[i].X * itemW;
+                let fpy = this._padding + this._canvas.FloatingPixels[i].Y * itemH;
+                this._canvas.FloatingPixels[i].Draw(this._context, fpx, fpy, itemW, itemH);
+            }
+        }
     }
 
     private OnMouseMove(evt)
     {
-        if(!this.DrawCoords) return;
+        if(!this.Maximized) return;
 
         this.CalculateMouseCoord(evt);
         if(this._mouseX >= 0 && this._mouseX < Canvas.Width &&
@@ -145,7 +160,7 @@ class CanvasPanel
 
     private OnMouseDown(evt)
     {
-        if(!this.DrawCoords) return;
+        if(!this.Maximized) return;
 
         this.CalculateMouseCoord(evt);
         this._isMouseDown = true;

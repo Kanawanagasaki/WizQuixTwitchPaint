@@ -142,7 +142,7 @@ namespace WizQuixTwitchPaintApiService.Logic
                 {
                     Canvas[item.X, item.Y] = item.Color;
                     if (item.Client == Broadcaster) await Wideband($"info setpixel {item.Client.Channel.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
-                    else await Wideband($"info setpixel {item.Client.User.DisplayName} {item.Coords} {item.Color.Name}", item.Client);
+                    else await Wideband($"info setpixel {item.Client.User.DisplayName} {item.Coords} {item.Color.Name}", item.Client, false);
                 }
             });
         }
@@ -248,7 +248,7 @@ namespace WizQuixTwitchPaintApiService.Logic
                     for (int ix = 0; ix < Room.Width; ix++)
                     {
                         var bytes = BitConverter.GetBytes(Canvas[ix, iy].RGB);
-                        btm.SetPixel(ix, iy, Color.FromArgb(bytes[0], bytes[1], bytes[2]));
+                        btm.SetPixel(ix, iy, Color.FromArgb(bytes[2], bytes[1], bytes[0]));
                     }
                 }
 
