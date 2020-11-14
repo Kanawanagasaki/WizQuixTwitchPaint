@@ -1,5 +1,10 @@
 class App
 {
+    public static Size:number = 600;
+    public static Percent:number = 0.75;
+    public static XPos:number = 100;
+    public static YPos:number = 10;
+
     private _placeholder:HTMLElement;
     private _palettePlaceholder:HTMLElement;
     private _canvasPlaceholder:HTMLElement;
@@ -19,34 +24,23 @@ class App
     private _loadedData:number = 0;
     private _isDead:boolean = false;
 
-    public Size:number = 600;
-    public Percent:number = 0.75;
+    private _uri:string;
 
     public constructor(placeholder:HTMLElement, uri:string)
     {
-        this._palette = new Palette();
-        this._canvas = new Canvas(this._palette);
-        this._client = new WebClient(uri, this._canvas);
-
-        this._palette.OnChange(()=>this.OnPaletteChanged());
-        this._client.OnConnected = ()=>this.OnConnect();
-        this._client.OnMissingRoom = ()=>this.OnMissingRoom();
-        this._client.OnKick = (reasong:string)=>this.OnKick(reasong);
-        this._client.OnDisconnected = ()=>this.OnDisconnect();
-        this._client.OnBackgroundChanged = () => this.OnBackgroundChanged();
-        this._client.OnTitleChanged = () => this.OnTitleChanged();
-
         this._placeholder = placeholder;
-        placeholder.style.backgroundColor = "black";
-        placeholder.style.position = "absolute";
-        placeholder.style.top = "10%";
-        placeholder.style.right = "0px";
-        placeholder.style.width = "100px";
-        placeholder.style.height = "100px";
-        placeholder.style.borderRadius = "5px";
-        placeholder.style.backgroundRepeat = "repeat";
-        placeholder.style.backgroundSize = "contain";
-        placeholder.style.backgroundPosition = "center";
+        this._uri = uri;
+
+        this._placeholder.style.backgroundColor = "black";
+        this._placeholder.style.position = "absolute";
+        this._placeholder.style.top = `calc(${App.YPos}% - ${App.YPos}px)`;
+        this._placeholder.style.left = `calc(${App.XPos}% - ${App.XPos}px)`;
+        this._placeholder.style.width = "100px";
+        this._placeholder.style.height = "100px";
+        this._placeholder.style.borderRadius = "5px";
+        this._placeholder.style.backgroundRepeat = "repeat";
+        this._placeholder.style.backgroundSize = "contain";
+        this._placeholder.style.backgroundPosition = "center";
 
         this._statusPlaceholder = document.createElement("div");
         this._statusPlaceholder.style.position = "absolute";
@@ -62,7 +56,7 @@ class App
         this._statusPlaceholder.style.alignItems = "center";
         this._statusPlaceholder.style.textAlign = "center";
         this._statusPlaceholder.style.display = "none";
-        this._statusPlaceholder.innerText = "Connecting to Hub...";
+        this._statusPlaceholder.innerText = "Waiting for authorization...";
 
         this._iconImg = document.createElement("img");
         this._iconImg.style.width = "100%";
@@ -82,6 +76,55 @@ class App
         this._iconStatusPlaceholder.style.textAlign = "center";
         this._iconStatusPlaceholder.append(this._iconImg);
 
+        Twitch.ext.onAuthorized((auth)=>
+        {
+            this.OnAuth(auth);
+        });
+    }
+
+    private ParseConfig()
+    {
+        let conf = Twitch.ext.configuration.broadcaster;
+        if(conf !== undefined)
+        {
+            try
+            {
+                let obj = JSON.parse(conf.content);
+
+                if("app_size" in obj) App.Size = obj.app_size;
+                if("app_percent" in obj) App.Percent = obj.app_percent/100.0;
+                if("app_xpos" in obj) App.XPos = obj.app_xpos;
+                if("app_ypos" in obj) App.YPos = obj.app_ypos;
+
+                if("fp_animationtime" in obj) FloatingPixel.AnimationTime = obj.fp_animationtime;
+                if("fp_traveldistancestart" in obj) FloatingPixel.TravelDistanceStart = obj.fp_traveldistancestart;
+                if("fp_traveldistance" in obj) FloatingPixel.TravelDistance = obj.fp_traveldistance;
+                if("fp_rotationangle" in obj) FloatingPixel.RotationAngle = obj.fp_rotationangle * Math.PI / 180.0;
+                if("fp_rotationtime" in obj) FloatingPixel.RotationTime = obj.fp_rotationtime;
+                if("fp_sizemultiplier" in obj) FloatingPixel.SizeMultiplier = obj.fp_sizemultiplier;
+            }
+            catch(e){}
+        }
+    }
+
+    private OnAuth(auth:Twitch.ext.Authorized)
+    {
+        this.ParseConfig();
+
+        this._palette = new Palette();
+        this._canvas = new Canvas(this._palette);
+        this._client = new WebClient(this._uri, this._canvas, auth);
+
+        this._palette.OnChange(()=>this.OnPaletteChanged());
+        this._client.OnConnected = ()=>this.OnConnect();
+        this._client.OnMissingRoom = ()=>this.OnMissingRoom();
+        this._client.OnKick = (reasong:string)=>this.OnKick(reasong);
+        this._client.OnDisconnected = ()=>this.OnDisconnect();
+        this._client.OnBackgroundChanged = () => this.OnBackgroundChanged();
+        this._client.OnTitleChanged = () => this.OnTitleChanged();
+
+        this._statusPlaceholder.innerText = "Conencting to hub...";
+
         this._canvasPlaceholder = document.createElement("div");
         this._canvasPlaceholder.style.position = "absolute";
         this._canvasPlaceholder.style.left = "0px";
@@ -95,15 +138,15 @@ class App
         this._palettePlaceholder.style.right = "0px";
         this._palettePlaceholder.style.top = "0px";
         this._palettePlaceholder.style.bottom = "0px";
-        this._palettePlaceholder.style.width = Math.round((1-this.Percent) * 100) + "%";
+        this._palettePlaceholder.style.width = Math.round((1-App.Percent) * 100) + "%";
         this._palettePlaceholder.style.display = "none";
 
         this._titlePlaceholder = document.createElement("div");
         this._titlePlaceholder.style.position = "absolute";
         this._titlePlaceholder.style.left = "0px";
         this._titlePlaceholder.style.top = "0px";
-        this._titlePlaceholder.style.width = Math.round(this.Percent * 100) + "%";
-        this._titlePlaceholder.style.height = Math.round((1-this.Percent) * 100) + "%";
+        this._titlePlaceholder.style.width = Math.round(App.Percent * 100) + "%";
+        this._titlePlaceholder.style.height = Math.round((1-App.Percent) * 100) + "%";
         this._titlePlaceholder.style.backgroundRepeat = "no-repeat";
         this._titlePlaceholder.style.backgroundSize = "contain";
         this._titlePlaceholder.style.backgroundPosition = "left";
@@ -113,68 +156,77 @@ class App
         this._placeholder.append(this._iconStatusPlaceholder);
 
         this._palettePanel = new PalettePanel(this._palettePlaceholder, this._palette);
-        this._canvasPanel = new CanvasPanel(this, this._canvasPlaceholder, this._canvas);
+        this._canvasPanel = new CanvasPanel(this._canvasPlaceholder, this._canvas);
 
         document.body.onclick = (e)=>
         {
-            if($(this._placeholder).has(e.target as Element).length)
+            let element = e.target as Element;
+            if(element.closest("#app")) this.Maximalize();
+            else this.Minimalize();
+        }
+    }
+
+    private Minimalize()
+    {
+        if(this._placeholder.style.width != "100px")
+        {
+            this.Animate(0, 1, (op)=>
             {
-                if(this._placeholder.style.width != this.Size + "px")
+                let size:number = App.Size - op * (App.Size - 100);
+                this._placeholder.style.width = size + "px";
+                this._placeholder.style.height = size + "px";
+                this._placeholder.style.top = `calc(${App.YPos}% - ${size}px * ${App.YPos/100})`;
+                this._placeholder.style.left = `calc(${App.XPos}% - ${size}px * ${App.XPos/100})`;
+
+                let percent = App.Percent + op * (1 - App.Percent);
+                this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+
+                if(op>0.9)
                 {
-                    this.Animate(1, 0, (op)=>
-                    {
-                        let size:number = this.Size - op * (this.Size - 100);
-                        this._placeholder.style.width = size + "px";
-                        this._placeholder.style.height = size + "px";
-
-                        let percent = this.Percent + op * (1 - this.Percent);
-                        this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
-                        this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
-
-                        if(op<0.9)
-                        {
-                            this._titlePlaceholder.style.display = "";
-                            this._palettePlaceholder.style.display = "";
-                        }
-                        if(op<0.5)
-                        {
-                            this._statusPlaceholder.style.display = "flex";
-                            this._iconStatusPlaceholder.style.display = "none";
-                        }
-
-                        this._canvasPanel.Maximized = size > 300;
-                    }, 100);
+                    this._titlePlaceholder.style.display = "none";
+                    this._palettePlaceholder.style.display = "none";
                 }
-            }
-            else
+                if(op>0.5)
+                {
+                    this._statusPlaceholder.style.display = "none";
+                    this._iconStatusPlaceholder.style.display = "flex";
+                }
+
+                this._canvasPanel.Maximized = size > 300;
+            }, 100);
+        }
+    }
+
+    private Maximalize()
+    {
+        if(this._placeholder.style.width != App.Size + "px")
+        {
+            this.Animate(1, 0, (op)=>
             {
-                if(this._placeholder.style.width != "100px")
+                let size:number = App.Size - op * (App.Size - 100);
+                this._placeholder.style.width = size + "px";
+                this._placeholder.style.height = size + "px";
+                this._placeholder.style.top = `calc(${App.YPos}% - ${size}px * ${App.YPos/100})`;
+                this._placeholder.style.left = `calc(${App.XPos}% - ${size}px * ${App.XPos/100})`;
+
+                let percent = App.Percent + op * (1 - App.Percent);
+                this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+
+                if(op<0.9)
                 {
-                    this.Animate(0, 1, (op)=>
-                    {
-                        let size:number = this.Size - op * (this.Size - 100);
-                        this._placeholder.style.width = size + "px";
-                        this._placeholder.style.height = size + "px";
-
-                        let percent = this.Percent + op * (1 - this.Percent);
-                        this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
-                        this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
-
-                        if(op>0.9)
-                        {
-                            this._titlePlaceholder.style.display = "none";
-                            this._palettePlaceholder.style.display = "none";
-                        }
-                        if(op>0.5)
-                        {
-                            this._statusPlaceholder.style.display = "none";
-                            this._iconStatusPlaceholder.style.display = "flex";
-                        }
-
-                        this._canvasPanel.Maximized = size > 300;
-                    }, 100);
+                    this._titlePlaceholder.style.display = "";
+                    this._palettePlaceholder.style.display = "";
                 }
-            }
+                if(op<0.5)
+                {
+                    this._statusPlaceholder.style.display = "flex";
+                    this._iconStatusPlaceholder.style.display = "none";
+                }
+
+                this._canvasPanel.Maximized = size > 300;
+            }, 100);
         }
     }
 

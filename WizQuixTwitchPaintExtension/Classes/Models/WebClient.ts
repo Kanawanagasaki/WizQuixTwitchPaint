@@ -3,7 +3,6 @@ class WebClient
     private _uri:string;
     private _socket:WebSocket;
 
-    public IsAuthorized:boolean;
     public IsConnected:boolean;
     private _auth:Twitch.ext.Authorized;
     private _jwt:any;
@@ -24,17 +23,15 @@ class WebClient
     public OnKick:(reasong:string)=>any = undefined;
     public OnDisconnected:()=>any = undefined;
 
-    public constructor(uri:string, canvas:Canvas)
+    public constructor(uri:string, canvas:Canvas, auth:Twitch.ext.Authorized)
     {
         this._uri = uri;
-        this._commands = new Commands(this);
         this.Canvas = canvas;
-        Twitch.ext.onAuthorized((auth:Twitch.ext.Authorized)=>
-        {
-            this.OnAuth(auth);
-        });
+        this._auth = auth;
+        this._commands = new Commands(this);
 
         this.StartTimer(()=>this.ProcessHistory());
+        this.Open();
     }
 
     private StartTimer(func:()=>any)
@@ -58,13 +55,6 @@ class WebClient
         this.Title = title;
         if(this.OnTitleChanged !== undefined)
             this.OnTitleChanged();
-    }
-
-    private OnAuth(auth:Twitch.ext.Authorized)
-    {
-        this.IsAuthorized = true;
-        this._auth = auth;
-        this.Open();
     }
 
     private ProcessHistory()
@@ -110,15 +100,12 @@ class WebClient
 
     public Open()
     {
-        if(this.IsAuthorized)
-        {
-            this._socket = new WebSocket(this._uri);
-    
-            this._socket.onopen = (e)=>{this.OnOpen(e)};
-            this._socket.onmessage = (e)=>{this.OnMessage(e)};
-            this._socket.onclose = (e)=>{this.OnClose(e)};
-            this._socket.onerror = (e)=>{this.OnError(e)};
-        }
+        this._socket = new WebSocket(this._uri);
+
+        this._socket.onopen = (e)=>{this.OnOpen(e)};
+        this._socket.onmessage = (e)=>{this.OnMessage(e)};
+        this._socket.onclose = (e)=>{this.OnClose(e)};
+        this._socket.onerror = (e)=>{this.OnError(e)};
     }
 
     public Close()
@@ -131,7 +118,6 @@ class WebClient
     {
         this.IsConnected = true;
         this._jwt = this.ParseJwt(this._auth.token);
-        console.log({auth:this._auth, jwt:this._jwt});
         this.TryJoinRoom();
     }
 

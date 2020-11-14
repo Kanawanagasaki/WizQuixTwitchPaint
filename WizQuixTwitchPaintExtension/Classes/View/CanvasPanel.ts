@@ -5,7 +5,6 @@ class CanvasPanel
     private _htmlCanvas:HTMLCanvasElement;
     private _context:CanvasRenderingContext2D;
 
-    private _app:App;
     private _width:number;
     private _height:number;
     private _padding:number = 4;
@@ -16,14 +15,13 @@ class CanvasPanel
 
     public Maximized:boolean = false;
 
-    public constructor(app:App, placeholder:HTMLElement, canvas:Canvas)
+    public constructor(placeholder:HTMLElement, canvas:Canvas)
     {
-        this._app = app;
         this._placehloder = placeholder;
         this._canvas = canvas;
 
-        this._width = Math.round(app.Size * app.Percent);
-        this._height = Math.round(app.Size * app.Percent);
+        this._width = Math.round(App.Size * App.Percent);
+        this._height = Math.round(App.Size * App.Percent);
 
         this._htmlCanvas = document.createElement("canvas");
         this._htmlCanvas.style.width = "100%";

@@ -14,7 +14,8 @@ class JoinRoomCommand extends ACommand
     {
         if(code === 404)
         {
-            this.Client.OnMissingRoom();
+            if(this.Client.OnMissingRoom)
+                this.Client.OnMissingRoom();
         }
     }
 }

@@ -17,29 +17,18 @@ var App = (function () {
         this._animationInterval = undefined;
         this._loadedData = 0;
         this._isDead = false;
-        this.Size = 600;
-        this.Percent = 0.75;
-        this._palette = new Palette();
-        this._canvas = new Canvas(this._palette);
-        this._client = new WebClient(uri, this._canvas);
-        this._palette.OnChange(function () { return _this.OnPaletteChanged(); });
-        this._client.OnConnected = function () { return _this.OnConnect(); };
-        this._client.OnMissingRoom = function () { return _this.OnMissingRoom(); };
-        this._client.OnKick = function (reasong) { return _this.OnKick(reasong); };
-        this._client.OnDisconnected = function () { return _this.OnDisconnect(); };
-        this._client.OnBackgroundChanged = function () { return _this.OnBackgroundChanged(); };
-        this._client.OnTitleChanged = function () { return _this.OnTitleChanged(); };
         this._placeholder = placeholder;
-        placeholder.style.backgroundColor = "black";
-        placeholder.style.position = "absolute";
-        placeholder.style.top = "10%";
-        placeholder.style.right = "0px";
-        placeholder.style.width = "100px";
-        placeholder.style.height = "100px";
-        placeholder.style.borderRadius = "5px";
-        placeholder.style.backgroundRepeat = "repeat";
-        placeholder.style.backgroundSize = "contain";
-        placeholder.style.backgroundPosition = "center";
+        this._uri = uri;
+        this._placeholder.style.backgroundColor = "black";
+        this._placeholder.style.position = "absolute";
+        this._placeholder.style.top = "calc(" + App.YPos + "% - " + App.YPos + "px)";
+        this._placeholder.style.left = "calc(" + App.XPos + "% - " + App.XPos + "px)";
+        this._placeholder.style.width = "100px";
+        this._placeholder.style.height = "100px";
+        this._placeholder.style.borderRadius = "5px";
+        this._placeholder.style.backgroundRepeat = "repeat";
+        this._placeholder.style.backgroundSize = "contain";
+        this._placeholder.style.backgroundPosition = "center";
         this._statusPlaceholder = document.createElement("div");
         this._statusPlaceholder.style.position = "absolute";
         this._statusPlaceholder.style.left = "0px";
@@ -54,7 +43,7 @@ var App = (function () {
         this._statusPlaceholder.style.alignItems = "center";
         this._statusPlaceholder.style.textAlign = "center";
         this._statusPlaceholder.style.display = "none";
-        this._statusPlaceholder.innerText = "Connecting to Hub...";
+        this._statusPlaceholder.innerText = "Waiting for authorization...";
         this._iconImg = document.createElement("img");
         this._iconImg.style.width = "100%";
         this._iconImg.style.height = "100%";
@@ -71,6 +60,53 @@ var App = (function () {
         this._iconStatusPlaceholder.style.alignItems = "center";
         this._iconStatusPlaceholder.style.textAlign = "center";
         this._iconStatusPlaceholder.append(this._iconImg);
+        Twitch.ext.onAuthorized(function (auth) {
+            _this.OnAuth(auth);
+        });
+    }
+    App.prototype.ParseConfig = function () {
+        var conf = Twitch.ext.configuration.broadcaster;
+        if (conf !== undefined) {
+            try {
+                var obj = JSON.parse(conf.content);
+                if ("app_size" in obj)
+                    App.Size = obj.app_size;
+                if ("app_percent" in obj)
+                    App.Percent = obj.app_percent / 100.0;
+                if ("app_xpos" in obj)
+                    App.XPos = obj.app_xpos;
+                if ("app_ypos" in obj)
+                    App.YPos = obj.app_ypos;
+                if ("fp_animationtime" in obj)
+                    FloatingPixel.AnimationTime = obj.fp_animationtime;
+                if ("fp_traveldistancestart" in obj)
+                    FloatingPixel.TravelDistanceStart = obj.fp_traveldistancestart;
+                if ("fp_traveldistance" in obj)
+                    FloatingPixel.TravelDistance = obj.fp_traveldistance;
+                if ("fp_rotationangle" in obj)
+                    FloatingPixel.RotationAngle = obj.fp_rotationangle * Math.PI / 180.0;
+                if ("fp_rotationtime" in obj)
+                    FloatingPixel.RotationTime = obj.fp_rotationtime;
+                if ("fp_sizemultiplier" in obj)
+                    FloatingPixel.SizeMultiplier = obj.fp_sizemultiplier;
+            }
+            catch (e) { }
+        }
+    };
+    App.prototype.OnAuth = function (auth) {
+        var _this = this;
+        this.ParseConfig();
+        this._palette = new Palette();
+        this._canvas = new Canvas(this._palette);
+        this._client = new WebClient(this._uri, this._canvas, auth);
+        this._palette.OnChange(function () { return _this.OnPaletteChanged(); });
+        this._client.OnConnected = function () { return _this.OnConnect(); };
+        this._client.OnMissingRoom = function () { return _this.OnMissingRoom(); };
+        this._client.OnKick = function (reasong) { return _this.OnKick(reasong); };
+        this._client.OnDisconnected = function () { return _this.OnDisconnect(); };
+        this._client.OnBackgroundChanged = function () { return _this.OnBackgroundChanged(); };
+        this._client.OnTitleChanged = function () { return _this.OnTitleChanged(); };
+        this._statusPlaceholder.innerText = "Conencting to hub...";
         this._canvasPlaceholder = document.createElement("div");
         this._canvasPlaceholder.style.position = "absolute";
         this._canvasPlaceholder.style.left = "0px";
@@ -83,14 +119,14 @@ var App = (function () {
         this._palettePlaceholder.style.right = "0px";
         this._palettePlaceholder.style.top = "0px";
         this._palettePlaceholder.style.bottom = "0px";
-        this._palettePlaceholder.style.width = Math.round((1 - this.Percent) * 100) + "%";
+        this._palettePlaceholder.style.width = Math.round((1 - App.Percent) * 100) + "%";
         this._palettePlaceholder.style.display = "none";
         this._titlePlaceholder = document.createElement("div");
         this._titlePlaceholder.style.position = "absolute";
         this._titlePlaceholder.style.left = "0px";
         this._titlePlaceholder.style.top = "0px";
-        this._titlePlaceholder.style.width = Math.round(this.Percent * 100) + "%";
-        this._titlePlaceholder.style.height = Math.round((1 - this.Percent) * 100) + "%";
+        this._titlePlaceholder.style.width = Math.round(App.Percent * 100) + "%";
+        this._titlePlaceholder.style.height = Math.round((1 - App.Percent) * 100) + "%";
         this._titlePlaceholder.style.backgroundRepeat = "no-repeat";
         this._titlePlaceholder.style.backgroundSize = "contain";
         this._titlePlaceholder.style.backgroundPosition = "left";
@@ -98,52 +134,63 @@ var App = (function () {
         this._placeholder.append(this._statusPlaceholder);
         this._placeholder.append(this._iconStatusPlaceholder);
         this._palettePanel = new PalettePanel(this._palettePlaceholder, this._palette);
-        this._canvasPanel = new CanvasPanel(this, this._canvasPlaceholder, this._canvas);
+        this._canvasPanel = new CanvasPanel(this._canvasPlaceholder, this._canvas);
         document.body.onclick = function (e) {
-            if ($(_this._placeholder).has(e.target).length) {
-                if (_this._placeholder.style.width != _this.Size + "px") {
-                    _this.Animate(1, 0, function (op) {
-                        var size = _this.Size - op * (_this.Size - 100);
-                        _this._placeholder.style.width = size + "px";
-                        _this._placeholder.style.height = size + "px";
-                        var percent = _this.Percent + op * (1 - _this.Percent);
-                        _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
-                        _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
-                        if (op < 0.9) {
-                            _this._titlePlaceholder.style.display = "";
-                            _this._palettePlaceholder.style.display = "";
-                        }
-                        if (op < 0.5) {
-                            _this._statusPlaceholder.style.display = "flex";
-                            _this._iconStatusPlaceholder.style.display = "none";
-                        }
-                        _this._canvasPanel.Maximized = size > 300;
-                    }, 100);
-                }
-            }
-            else {
-                if (_this._placeholder.style.width != "100px") {
-                    _this.Animate(0, 1, function (op) {
-                        var size = _this.Size - op * (_this.Size - 100);
-                        _this._placeholder.style.width = size + "px";
-                        _this._placeholder.style.height = size + "px";
-                        var percent = _this.Percent + op * (1 - _this.Percent);
-                        _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
-                        _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
-                        if (op > 0.9) {
-                            _this._titlePlaceholder.style.display = "none";
-                            _this._palettePlaceholder.style.display = "none";
-                        }
-                        if (op > 0.5) {
-                            _this._statusPlaceholder.style.display = "none";
-                            _this._iconStatusPlaceholder.style.display = "flex";
-                        }
-                        _this._canvasPanel.Maximized = size > 300;
-                    }, 100);
-                }
-            }
+            var element = e.target;
+            if (element.closest("#app"))
+                _this.Maximalize();
+            else
+                _this.Minimalize();
         };
-    }
+    };
+    App.prototype.Minimalize = function () {
+        var _this = this;
+        if (this._placeholder.style.width != "100px") {
+            this.Animate(0, 1, function (op) {
+                var size = App.Size - op * (App.Size - 100);
+                _this._placeholder.style.width = size + "px";
+                _this._placeholder.style.height = size + "px";
+                _this._placeholder.style.top = "calc(" + App.YPos + "% - " + size + "px * " + App.YPos / 100 + ")";
+                _this._placeholder.style.left = "calc(" + App.XPos + "% - " + size + "px * " + App.XPos / 100 + ")";
+                var percent = App.Percent + op * (1 - App.Percent);
+                _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+                if (op > 0.9) {
+                    _this._titlePlaceholder.style.display = "none";
+                    _this._palettePlaceholder.style.display = "none";
+                }
+                if (op > 0.5) {
+                    _this._statusPlaceholder.style.display = "none";
+                    _this._iconStatusPlaceholder.style.display = "flex";
+                }
+                _this._canvasPanel.Maximized = size > 300;
+            }, 100);
+        }
+    };
+    App.prototype.Maximalize = function () {
+        var _this = this;
+        if (this._placeholder.style.width != App.Size + "px") {
+            this.Animate(1, 0, function (op) {
+                var size = App.Size - op * (App.Size - 100);
+                _this._placeholder.style.width = size + "px";
+                _this._placeholder.style.height = size + "px";
+                _this._placeholder.style.top = "calc(" + App.YPos + "% - " + size + "px * " + App.YPos / 100 + ")";
+                _this._placeholder.style.left = "calc(" + App.XPos + "% - " + size + "px * " + App.XPos / 100 + ")";
+                var percent = App.Percent + op * (1 - App.Percent);
+                _this._canvasPlaceholder.style.width = Math.round(percent * 100) + "%";
+                _this._canvasPlaceholder.style.height = Math.round(percent * 100) + "%";
+                if (op < 0.9) {
+                    _this._titlePlaceholder.style.display = "";
+                    _this._palettePlaceholder.style.display = "";
+                }
+                if (op < 0.5) {
+                    _this._statusPlaceholder.style.display = "flex";
+                    _this._iconStatusPlaceholder.style.display = "none";
+                }
+                _this._canvasPanel.Maximized = size > 300;
+            }, 100);
+        }
+    };
     App.prototype.OnBackgroundChanged = function () {
         var img = new Image();
         img.src = this._client.Background;
@@ -248,48 +295,289 @@ var App = (function () {
             }
         }, 10);
     };
+    App.Size = 600;
+    App.Percent = 0.75;
+    App.XPos = 100;
+    App.YPos = 10;
     return App;
 }());
 var Config = (function () {
     function Config(placeholder, version) {
+        var _this = this;
         this._options = [
-            {
-                name: "string_test",
-                text: "String Test",
-                type: "string"
-            },
-            {
-                name: "int_test",
-                text: "Integer Test",
-                type: "int",
-                min: 10,
-                max: 20,
-                step: 5
-            },
-            {
-                name: "float_test",
-                text: "Float Test",
-                type: "float",
-                min: 5.5,
-                max: 7.5,
-                step: 0.25
-            },
-            {
-                name: "select_test",
-                text: "Select Test",
-                type: "select",
-                options: [
-                    "option1", "option2", "option3"
-                ]
-            }
+            new IntConfigOption("app_size", "Size (px)").SetMin(300).SetMax(700).SetDefault(600),
+            new IntConfigOption("app_percent", "Canvas Size Percent (%)").SetMin(0).SetMax(100).SetStep(1).SetDefault(75),
+            new IntConfigOption("app_xpos", "X Pos (%)").SetMin(0).SetMax(100).SetDefault(100),
+            new IntConfigOption("app_ypos", "Y Pos (%)").SetMin(0).SetMax(100).SetDefault(10),
+            new IntConfigOption("fp_animationtime", "Pixel Animation Time (ms)").SetMin(0).SetMax(60000).SetStep(1).SetDefault(1333),
+            new FloatConfigOption("fp_traveldistancestart", "Pixel Travel Start (unit)").SetMin(-100).SetMax(100).SetStep(0.01).SetDefault(0.5),
+            new FloatConfigOption("fp_traveldistance", "Pixel Travel Distance (unit)").SetMin(-100).SetMax(100).SetStep(0.01).SetDefault(1.5),
+            new FloatConfigOption("fp_rotationangle", "Pixel Rotation Angle (deg)").SetMin(-360).SetMax(360).SetStep(0.01).SetDefault(1.5),
+            new IntConfigOption("fp_rotationtime", "Pixel Rotation Time (ms)").SetMin(0).SetMax(60000).SetStep(1).SetDefault(2000),
+            new FloatConfigOption("fp_sizemultiplier", "Pixel Size Multiplier").SetMin(0).SetMax(100).SetStep(0.01).SetDefault(1.1)
         ];
         this._placeholder = placeholder;
         this._version = version;
-        Twitch.ext.onContext(function (ctx, changed) {
+        this._placeholder.className = "p-4 bg-white";
+        var errorDiv = document.createElement("div");
+        errorDiv.style.display = "none";
+        errorDiv.className = "bg-danger text-light m-1 p-3 rounded";
+        this._placeholder.append(errorDiv);
+        var table = document.createElement("table");
+        table.style.width = "100%";
+        this._placeholder.append(table);
+        Twitch.ext.onAuthorized(function (auth) {
+            var save = {};
+            if (Twitch.ext.configuration.broadcaster !== undefined)
+                try {
+                    save = JSON.parse(Twitch.ext.configuration.broadcaster.content);
+                }
+                catch (e) { }
+            for (var i = 0; i < _this._options.length; i++) {
+                var tr = document.createElement("tr");
+                var td0 = document.createElement("td");
+                var td1 = document.createElement("td");
+                td0.innerText = _this._options[i].Text;
+                td0.style.padding = "8px";
+                var el = _this._options[i].GetElement(save[_this._options[i].Name]);
+                el.style.width = "100%";
+                td1.style.padding = "8px";
+                td1.append(el);
+                tr.append(td0);
+                tr.append(td1);
+                table.append(tr);
+            }
+            var btn = document.createElement("button");
+            btn.style.backgroundColor = "#6441A4";
+            btn.className = "btn text-white";
+            btn.innerText = "Save";
+            btn.onclick = function () {
+                var save = {};
+                var hasInvalid = false;
+                var errorText = "";
+                for (var i = 0; i < _this._options.length; i++) {
+                    if (!_this._options[i].IsValueValid()) {
+                        hasInvalid = true;
+                        errorText += _this._options[i].GetErrorText() + "\n";
+                    }
+                    save[_this._options[i].Name] = _this._options[i].GetValue();
+                }
+                if (hasInvalid) {
+                    errorDiv.style.display = "";
+                    errorDiv.innerText = errorText;
+                }
+                else {
+                    errorDiv.style.display = "none";
+                    errorDiv.innerText = errorText;
+                    console.log(save);
+                    Twitch.ext.configuration.set("broadcaster", _this._version, JSON.stringify(save));
+                }
+            };
+            _this._placeholder.append(btn);
         });
     }
     return Config;
 }());
+var AConfigOption = (function () {
+    function AConfigOption(name, text, type) {
+        this.Name = name;
+        this.Text = text;
+        this.Type = type;
+    }
+    AConfigOption.prototype.SetDefault = function (def) {
+        this.Default = def;
+        return this;
+    };
+    return AConfigOption;
+}());
+var NumberConfigOption = (function (_super) {
+    __extends(NumberConfigOption, _super);
+    function NumberConfigOption(name, text, type) {
+        var _this = _super.call(this, name, text, type) || this;
+        _this._el = document.createElement("input");
+        _this._el.placeholder = _this.Text;
+        _this._el.type = "number";
+        _this._el.className = "form-control";
+        return _this;
+    }
+    NumberConfigOption.prototype.SetMin = function (min) {
+        this._isMinSetted = true;
+        this._min = min;
+        this._el.min = min.toString();
+        return this;
+    };
+    NumberConfigOption.prototype.SetMax = function (max) {
+        this._isMaxSetted = true;
+        this._max = max;
+        this._el.max = max.toString();
+        return this;
+    };
+    NumberConfigOption.prototype.SetStep = function (step) {
+        this._isStepSetted = true;
+        this._step = step;
+        this._el.step = step.toString();
+        return this;
+    };
+    NumberConfigOption.prototype.GetElement = function (value) {
+        if (value !== undefined)
+            this._el.value = value;
+        else
+            this._el.value = this.Default;
+        return this._el;
+    };
+    NumberConfigOption.prototype.GetValue = function () {
+        return this._el.value;
+    };
+    NumberConfigOption.prototype.GetErrorText = function () {
+        if (this._isMinSetted && this._isMaxSetted)
+            return "'" + this.Text + "' must be more or equals " + this._min + " and less or equals " + this._max;
+        if (this._isMinSetted && !this._isMaxSetted)
+            return "'" + this.Text + "' must be more or equals " + this._min;
+        if (!this._isMinSetted && this._isMaxSetted)
+            return "'" + this.Text + "' must be and less or equals " + this._max;
+        return "";
+    };
+    return NumberConfigOption;
+}(AConfigOption));
+var ConfigOptionTypes;
+(function (ConfigOptionTypes) {
+    ConfigOptionTypes[ConfigOptionTypes["String"] = 0] = "String";
+    ConfigOptionTypes[ConfigOptionTypes["Int"] = 1] = "Int";
+    ConfigOptionTypes[ConfigOptionTypes["Float"] = 2] = "Float";
+    ConfigOptionTypes[ConfigOptionTypes["Select"] = 3] = "Select";
+})(ConfigOptionTypes || (ConfigOptionTypes = {}));
+var FloatConfigOption = (function (_super) {
+    __extends(FloatConfigOption, _super);
+    function FloatConfigOption(name, text) {
+        return _super.call(this, name, text, ConfigOptionTypes.Float) || this;
+    }
+    FloatConfigOption.prototype.GetValue = function () {
+        var str = _super.prototype.GetValue.call(this);
+        var ret = parseFloat(str);
+        if (this._isStepSetted)
+            return Math.round(ret * 100 - (ret * 100) % (this._step * 100)) / 100;
+        else
+            return ret;
+    };
+    FloatConfigOption.prototype.IsValueValid = function () {
+        var val = this.GetValue();
+        if (isNaN(val))
+            return false;
+        if (this._isMinSetted && val < this._min)
+            return false;
+        if (this._isMaxSetted && val > this._max)
+            return false;
+        return true;
+    };
+    return FloatConfigOption;
+}(NumberConfigOption));
+var IntConfigOption = (function (_super) {
+    __extends(IntConfigOption, _super);
+    function IntConfigOption(name, text) {
+        return _super.call(this, name, text, ConfigOptionTypes.Int) || this;
+    }
+    IntConfigOption.prototype.GetValue = function () {
+        var str = _super.prototype.GetValue.call(this);
+        var ret = parseInt(str);
+        if (this._isStepSetted)
+            return ret - ret % this._step;
+        else
+            return ret;
+    };
+    IntConfigOption.prototype.IsValueValid = function () {
+        var val = this.GetValue();
+        if (isNaN(val))
+            return false;
+        if (this._isMinSetted && val < this._min)
+            return false;
+        if (this._isMaxSetted && val > this._max)
+            return false;
+        return true;
+    };
+    return IntConfigOption;
+}(NumberConfigOption));
+var SelectConfigOption = (function (_super) {
+    __extends(SelectConfigOption, _super);
+    function SelectConfigOption(name, text, options) {
+        var _this = _super.call(this, name, text, ConfigOptionTypes.Select) || this;
+        _this._options = options;
+        _this._el = document.createElement("select");
+        for (var i = 0; i < _this._options.length; i++) {
+            var opt = document.createElement("option");
+            opt.value = _this._options[i].name;
+            opt.innerText = _this._options[i].text;
+            _this._el.append(opt);
+        }
+        _this._el.className = "form-control";
+        return _this;
+    }
+    SelectConfigOption.prototype.GetElement = function () {
+        return this._el;
+    };
+    SelectConfigOption.prototype.GetValue = function () {
+        return this._el.value;
+    };
+    SelectConfigOption.prototype.IsValueValid = function () {
+        return true;
+    };
+    SelectConfigOption.prototype.GetErrorText = function () {
+        return "";
+    };
+    return SelectConfigOption;
+}(AConfigOption));
+var StringConfigOption = (function (_super) {
+    __extends(StringConfigOption, _super);
+    function StringConfigOption(name, text) {
+        var _this = _super.call(this, name, text, ConfigOptionTypes.String) || this;
+        _this._isMinSetted = false;
+        _this._isMaxSetted = false;
+        _this._el = document.createElement("input");
+        _this._el.placeholder = _this.Text;
+        _this._el.type = "text";
+        _this._el.className = "form-control";
+        return _this;
+    }
+    StringConfigOption.prototype.SetMinLength = function (minLen) {
+        this._isMinSetted = true;
+        this._minLength = minLen;
+        this._el.minLength = minLen;
+        return this;
+    };
+    StringConfigOption.prototype.SetMaxLength = function (maxLen) {
+        this._isMaxSetted = true;
+        this._maxLength = maxLen;
+        this._el.maxLength = maxLen;
+        return this;
+    };
+    StringConfigOption.prototype.GetElement = function (value) {
+        if (value !== undefined)
+            this._el.value = value;
+        else
+            this._el.value = this.Default;
+        return this._el;
+    };
+    StringConfigOption.prototype.GetValue = function () {
+        return this._el.value;
+    };
+    StringConfigOption.prototype.IsValueValid = function () {
+        var val = this.GetValue();
+        if (this._isMinSetted && val.length < this._minLength)
+            return false;
+        if (this._isMaxSetted && val.length > this._maxLength)
+            return false;
+        return true;
+    };
+    StringConfigOption.prototype.GetErrorText = function () {
+        if (this._isMinSetted && this._isMaxSetted)
+            return "'" + this.Text + "' must be more or equals " + this._minLength + " and less or equals " + this._maxLength + " characters";
+        if (this._isMinSetted && !this._isMaxSetted)
+            return "'" + this.Text + "' must be more or equals " + this._minLength + " characters";
+        if (!this._isMinSetted && this._isMaxSetted)
+            return "'" + this.Text + "' must be and less or equals " + this._maxLength + " characters";
+        return "";
+    };
+    return StringConfigOption;
+}(AConfigOption));
 var Color = (function () {
     function Color(name, rgb) {
         this.Name = name;
@@ -505,7 +793,7 @@ var HistoryItem = (function () {
     return HistoryItem;
 }());
 var WebClient = (function () {
-    function WebClient(uri, canvas) {
+    function WebClient(uri, canvas, auth) {
         var _this = this;
         this.Interval = 2500;
         this.OnBackgroundChanged = undefined;
@@ -515,12 +803,11 @@ var WebClient = (function () {
         this.OnKick = undefined;
         this.OnDisconnected = undefined;
         this._uri = uri;
-        this._commands = new Commands(this);
         this.Canvas = canvas;
-        Twitch.ext.onAuthorized(function (auth) {
-            _this.OnAuth(auth);
-        });
+        this._auth = auth;
+        this._commands = new Commands(this);
         this.StartTimer(function () { return _this.ProcessHistory(); });
+        this.Open();
     }
     WebClient.prototype.StartTimer = function (func) {
         var _this = this;
@@ -538,11 +825,6 @@ var WebClient = (function () {
         this.Title = title;
         if (this.OnTitleChanged !== undefined)
             this.OnTitleChanged();
-    };
-    WebClient.prototype.OnAuth = function (auth) {
-        this.IsAuthorized = true;
-        this._auth = auth;
-        this.Open();
     };
     WebClient.prototype.ProcessHistory = function () {
         if (this.IsConnected && this.Canvas.History.length > 0) {
@@ -574,13 +856,11 @@ var WebClient = (function () {
     };
     WebClient.prototype.Open = function () {
         var _this = this;
-        if (this.IsAuthorized) {
-            this._socket = new WebSocket(this._uri);
-            this._socket.onopen = function (e) { _this.OnOpen(e); };
-            this._socket.onmessage = function (e) { _this.OnMessage(e); };
-            this._socket.onclose = function (e) { _this.OnClose(e); };
-            this._socket.onerror = function (e) { _this.OnError(e); };
-        }
+        this._socket = new WebSocket(this._uri);
+        this._socket.onopen = function (e) { _this.OnOpen(e); };
+        this._socket.onmessage = function (e) { _this.OnMessage(e); };
+        this._socket.onclose = function (e) { _this.OnClose(e); };
+        this._socket.onerror = function (e) { _this.OnError(e); };
     };
     WebClient.prototype.Close = function () {
         this._socket.close(1000, "");
@@ -589,7 +869,6 @@ var WebClient = (function () {
     WebClient.prototype.OnOpen = function (event) {
         this.IsConnected = true;
         this._jwt = this.ParseJwt(this._auth.token);
-        console.log({ auth: this._auth, jwt: this._jwt });
         this.TryJoinRoom();
     };
     WebClient.prototype.TryJoinRoom = function () {
@@ -792,7 +1071,8 @@ var JoinRoomCommand = (function (_super) {
     };
     JoinRoomCommand.prototype.OnError = function (code, error) {
         if (code === 404) {
-            this.Client.OnMissingRoom();
+            if (this.Client.OnMissingRoom)
+                this.Client.OnMissingRoom();
         }
     };
     return JoinRoomCommand;
@@ -866,18 +1146,17 @@ var SetTitleCommand = (function (_super) {
     return SetTitleCommand;
 }(ACommand));
 var CanvasPanel = (function () {
-    function CanvasPanel(app, placeholder, canvas) {
+    function CanvasPanel(placeholder, canvas) {
         var _this = this;
         this._padding = 4;
         this._mouseX = -1;
         this._mouseY = -1;
         this._isMouseDown = false;
         this.Maximized = false;
-        this._app = app;
         this._placehloder = placeholder;
         this._canvas = canvas;
-        this._width = Math.round(app.Size * app.Percent);
-        this._height = Math.round(app.Size * app.Percent);
+        this._width = Math.round(App.Size * App.Percent);
+        this._height = Math.round(App.Size * App.Percent);
         this._htmlCanvas = document.createElement("canvas");
         this._htmlCanvas.style.width = "100%";
         this._htmlCanvas.style.height = "100%";
@@ -1088,21 +1367,6 @@ if (appDiv !== null)
 var configDiv = document.getElementById("config");
 if (configDiv !== null)
     new Config(configDiv, version);
-var AConfigOption = (function () {
-    function AConfigOption(name, text, type) {
-        this.Name = name;
-        this.Text = text;
-        this.Type = type;
-    }
-    return AConfigOption;
-}());
-var ConfigOptionTypes;
-(function (ConfigOptionTypes) {
-    ConfigOptionTypes[ConfigOptionTypes["String"] = 0] = "String";
-    ConfigOptionTypes[ConfigOptionTypes["Int"] = 1] = "Int";
-    ConfigOptionTypes[ConfigOptionTypes["Float"] = 2] = "Float";
-    ConfigOptionTypes[ConfigOptionTypes["Select"] = 3] = "Select";
-})(ConfigOptionTypes || (ConfigOptionTypes = {}));
 var FloatingPixel = (function () {
     function FloatingPixel() {
         this._startTime = Date.now();
