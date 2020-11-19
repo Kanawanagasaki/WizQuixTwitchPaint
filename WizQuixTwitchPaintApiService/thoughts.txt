@@ -1,4 +1,10 @@
-Connection: websockets. After handshaking clients should send 'createroom' or 'joinroom' command.
+Hub is running on Azure server 
+Domain is wizquixtwitchpaint.azurewebsites.net
+Address for websockets is wss://wizquixtwitchpaint.azurewebsites.net/ws
+where `wss://` is websocket protocol, `wizquixtwitchpaint.azurewebsites.net` is domain, `/ws` is websocket path
+
+Connection: websockets. After handshaking client must send 'createroom' or 'joinroom' command.
+After creating or joining room client will be able to send other command
 Commands are lines with new line symbol (\n) on the end.
 First word in line is command name, after is arguments.
 
@@ -7,9 +13,26 @@ Like if command is
 `lovetahtcat` - command
 `he`, `so` and `cute` are arguments
 
-#everybody:
+Room have 3 different modes:
+>inactive - if room in this mode command `setpixel` will be ignored. only room creator can use `setpixel` command while room inactive
+>hold - if room in this mode commands `setpixel` will be holded until mode become `active`, if room become `inactive` holded pixels will be be lost. Room creator not affected
+>active - room accepts `setpixel` commands and broadcasts them to everybody
+When room is created, by default mode will be inactive
+Best practice will be if you as Room Creator will connecting to Hub as soon as your application will launch. And then change mode to whatever you need.
 
-command: createroom <{channelid:int|channelname:string}>
+Please, before disconnect make sure that you sended websocket's close frame
+When you disconnect from the hub, the room will be destroyed. In the twitch extension it will result to "Room not found" notification
+
+
+
+------------------ COMMANDS ------------------
+
+................
+#new connection:
+................
+
+####################### createroom #######################
+command: createroom <channelid:int|channelname:string> // in future it will be replaced with OAuth token, keep it in mind
 on success: info createroom OK
 on fail:
 	- error createroom 400 Wrong number of arguments.
@@ -18,8 +41,9 @@ on fail:
 examples:
 	- createroom 123123123
 	- createroom kanawanagasakiyoko
-
-command: joinroom <{channelid:int|channelname:string}> <{userid:int|username:string}>
+	
+####################### joinroom #######################
+command: joinroom <channelid:int|channelname:string> <userid:int|username:string> // in future userid|username will be replaced with JWT token
 on success: info joinroom OK
 on fail:
 	- error joinroom 400 Wrong number of arguments.
@@ -29,39 +53,61 @@ examples:
 	- joinroom 123123123 kanawanagasakiyoko // Identifying as viewer with twitch nickname kanawanagasakiyoko and connection to channel with id 123123123
 	- joinroom kanawanagasakiyoko 123123123 // Identifying as viewer with twitch id 123123123 and connection to channel kanawanagasakiyoko
 
+
+
+...........
+#everybody:
+...........
+	
+####################### setpixel #######################
 command: setpixel <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
 on success: info setpixel OK
 on fail:
 	- error setpixel 404 Color '<colorname:string>' didn't exists
 	- error setpixel 400 Coordinate is out of range
 	- error setpixel 400 Wrong number of arguments 
+	- error setpixel 200 Ignored // if room mode is inactive
 examples:
 	- setpixel A1 Red
 	- setpixel d13 blue
-
+	
+####################### getcolors #######################
 command: getcolors
 on success: info getcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
 
+####################### getbackground #######################
 command: getbackground
 on success: info getbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 
+####################### gettitle #######################
 command: gettitle
 on success: info gettitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 
+####################### getcanvas #######################
 command: getcanvas
 on success: info getcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]> coordinate in formal <letter:char><number:int>
 
+####################### getinterval #######################
 command: getinterval
 on success: info getinterval <interval:int>
 
-#room creator:
+####################### getmode #######################
+command: getmode
+on success: info getmode <inactive|hold|active>
 
+
+..............
+#room creator:
+..............
+
+####################### setcolors #######################
 command: setcolors <palette:string> // palette in format: <<colorname:string>=<colorrgb:int>;[]>
 on success: info setcolors OK
 examples:
 	- setcolors red=16711680;blue=255;green=65280;
 	- setcolors Black=0;White=16777215;
-
+	
+####################### setcolor #######################
 command: setcolor <colorname:string> <colorrgb:int>
 on success: info setcolor OK
 on fail:
@@ -71,9 +117,11 @@ examples:
 	- setcolor red 16711680
 	- setcolor BLACK 0
 	
+####################### clearpalette #######################
 command: clearpalette // this command will clear the palette
 on success: info clearpalette OK
 
+####################### setbackground #######################
 command: setbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 on success: info setbackground OK
 on fail:
@@ -81,39 +129,53 @@ on fail:
 	- error setbackground 400 Wrong number of arguments 
 examples:
 	- setbackground data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=
-
+	
+####################### settitle #######################
 command: settitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 on success: info setbackground OK
 on fail:
 	- error setbackground 400 Bad base64 encoding
 	- error setbackground 400 Wrong number of arguments 
-
+	
+####################### setcanvas #######################
 command: setcanvas <canvas:string> // canvas in format: <<coordinate:string>=<colorname:string>;[]>, coordinate in formal: <letter:char><number:int>, colornames should be sent earlier
 on success: info setcanvas OK
 examples:
 	- setcanvas A1=Red;A2=Blue;A3=Green;F11=Semi Light Semi Dark Random Color;A4=Black;A5=Light Gray;
-
+	
+####################### setinterval #######################
 command: setinterval <interval:int>
 on success: info setinterval OK
 on fail:
 	- error setbackground 400 Wrong number of arguments
 	- error setbackground 400 Interval must be a number
 	- error setbackground 400 Interval must be greater than 0
-
-command: kick <{userid:int|username:string}> [<reason:string>]
+	
+####################### kick #######################
+command: kick <userid:int|username:string> [<reason:string>]
 on success: info kick OK
 on fail:
 	- error kick 400 Wrong number of arguments
 	- error kick 404 User not found
+	
+####################### setmode #######################
+command: setmode <inactive|hold|active>
+on success: info setmode OK
+on fail:
+	- error kick 400 Wrong number of arguments
+	- error kick 400 Invalid mode name
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 #server:
 
+command: info join <username:string> // username joined the room
+command: info leave <username:string> // username left from the room
 command: info setpixel <username:string> <coordinate:string> <colorname:string> // coordinate in formal <letter:char><number:int>
 command: info setbackground <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 command: info settitle <image:string> // image is a base64 encoded png image (data:image/png;base64,<Base64>)
 command: info setcolor <colorname:string> <colorrgb:int>
 command: info clearpalette
 command: info setinterval <interval:int>
-command: info kicked [<reason:string>] // client kicked from room, it can happens because of destroying room, if so reason will be "room_destroyed". connection to hub is still active, client can rejoin or create new room
+command: info kick [<reason:string>] // client kicked from room, it can happens because of destroying room, if so reason will be "room_destroyed". connection to hub is still active, client can rejoin or create new room
+command: info setmode <inactive|hold|active>
